@@ -1,7 +1,7 @@
 """
 Authentication routes (login, register, logout)
 """
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
@@ -92,7 +92,12 @@ def login():
         else:
             flash('Invalid email or password', 'error')
     
-    return render_template('auth/login.html')
+    # Add cache-busting headers to prevent browser caching
+    response = make_response(render_template('auth/login.html'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @auth_bp.route('/logout')
 @login_required

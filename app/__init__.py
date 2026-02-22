@@ -22,6 +22,11 @@ def create_app(config_name=None):
     config_name = config_name or os.environ.get('FLASK_ENV', 'default')
     app.config.from_object(config[config_name])
     
+    # Disable template caching in production to see updates immediately
+    # (Remove this after confirming the new design works)
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.jinja_env.auto_reload = True
+    
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)

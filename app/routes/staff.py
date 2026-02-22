@@ -7,6 +7,7 @@ from app import db
 from app.models.found_item import FoundItem
 from app.models.claim import Claim
 from app.models.lost_item import LostItem
+from app.models.match import Match
 from app.services.lost_found_matcher import LostFoundMatcher
 from app.services.notification_service import NotificationService
 from app.utils.helpers import save_uploaded_file, role_required
@@ -214,7 +215,6 @@ def release_item(claim_id):
     claim.lost_item.status = 'claimed'
     
     # Update found item status if matched
-    from app.models.match import Match
     match = Match.query.filter_by(
         lost_item_id=claim.item_id,
         status='confirmed'
