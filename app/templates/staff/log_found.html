@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Log Found Item - Lost and Found System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Log Found Item</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">Item Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="item_name" name="item_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select category</option>
+                                <option value="ID">ID</option>
+                                <option value="Wallet">Wallet</option>
+                                <option value="Phone">Phone</option>
+                                <option value="Keys">Keys</option>
+                                <option value="Bag">Bag</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Books">Books</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="color" class="form-label">Color</label>
+                            <input type="text" class="form-control" id="color" name="color">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date_found" class="form-label">Date Found <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date_found" name="date_found" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="location_found" class="form-label">Location Found</label>
+                            <input type="text" class="form-control" id="location_found" name="location_found">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="storage_location" class="form-label">Storage Location</label>
+                        <input type="text" class="form-control" id="storage_location" name="storage_location">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="priority_flag" name="priority_flag">
+                        <label class="form-check-label" for="priority_flag">Mark as High Priority</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image" class="form-label">Item Image</label>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                        <small class="form-text text-muted">Upload an image of the item (optional)</small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Log Item</button>
+                        <a href="{{ url_for('staff.dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Found Items - Lost and Found System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Found Items</h2>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label">Filter by Status</label>
+                <select class="form-select" id="status" name="status" onchange="this.form.submit()">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                    <option value="available" {% if status_filter == 'available' %}selected{% endif %}>Available</option>
+                    <option value="matched" {% if status_filter == 'matched' %}selected{% endif %}>Matched</option>
+                    <option value="claimed" {% if status_filter == 'claimed' %}selected{% endif %}>Claimed</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Items Table -->
+<div class="card">
+    <div class="card-body">
+        {% if found_items.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Date Found</th>
+                        <th>Location</th>
+                        <th>Storage</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in found_items.items %}
+                    <tr>
+                        <td>{{ item.item_name }}</td>
+                        <td>
+                            {{ item.category }}
+                            {% if item.priority_flag %}
+                            <span class="badge bg-warning">High Priority</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.date_found }}</td>
+                        <td>{{ item.location_found or 'N/A' }}</td>
+                        <td>{{ item.storage_location or 'N/A' }}</td>
+                        <td>
+                            <span class="status-badge status-{{ item.status }}">
+                                {{ item.status.title() }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if found_items.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if found_items.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ found_items.prev_num }}&status={{ status_filter }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for page_num in found_items.iter_pages() %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == found_items.page %}active{% endif %}">
+                            <a class="page-link" href="?page={{ page_num }}&status={{ status_filter }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                {% if found_items.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ found_items.next_num }}&status={{ status_filter }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <p class="text-muted">No items found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

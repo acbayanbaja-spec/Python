@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Lost and Found System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Reports & Statistics</h2>
+
+<!-- Export Options -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Export Data</h5>
+    </div>
+    <div class="card-body">
+        <a href="{{ url_for('admin.export_csv', type='lost') }}" class="btn btn-outline-primary">
+            <i class="bi bi-download"></i> Export Lost Items
+        </a>
+        <a href="{{ url_for('admin.export_csv', type='found') }}" class="btn btn-outline-primary">
+            <i class="bi bi-download"></i> Export Found Items
+        </a>
+        <a href="{{ url_for('admin.export_csv', type='claims') }}" class="btn btn-outline-primary">
+            <i class="bi bi-download"></i> Export Claims
+        </a>
+    </div>
+</div>
+
+<!-- Monthly Statistics -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Monthly Statistics (Last 6 Months)</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Lost Items</th>
+                        <th>Found Items</th>
+                        <th>Claimed Items</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for month in months %}
+                    <tr>
+                        <td>{{ month.month }}</td>
+                        <td>{{ month.lost }}</td>
+                        <td>{{ month.found }}</td>
+                        <td>{{ month.claimed }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Category Statistics -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Lost Items by Category</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in lost_categories %}
+                            <tr>
+                                <td>{{ cat.category }}</td>
+                                <td>{{ cat.count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Found Items by Category</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in found_categories %}
+                            <tr>
+                                <td>{{ cat.category }}</td>
+                                <td>{{ cat.count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Claim - Lost and Found System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Verify Claim</h2>
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Enter Claim Code</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="claim_code" class="form-label">Claim Code</label>
+                        <input type="text" class="form-control" id="claim_code" name="claim_code" placeholder="Enter QR code or claim code" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Verify</button>
+                </form>
+            </div>
+        </div>
+        
+        {% if claim %}
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Claim Verified</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Claim Code:</strong> <code>{{ claim.claim_code }}</code></p>
+                <p><strong>Item:</strong> {{ claim.lost_item.item_name }}</p>
+                <p><strong>Category:</strong> {{ claim.lost_item.category }}</p>
+                <p><strong>User:</strong> {{ claim.user.name }} ({{ claim.user.email }})</p>
+                <p><strong>Status:</strong> 
+                    <span class="status-badge status-{{ claim.release_status }}">
+                        {{ claim.release_status.title() }}
+                    </span>
+                </p>
+                
+                {% if claim.release_status == 'pending' %}
+                <form method="POST" action="{{ url_for('staff.release_item', claim_id=claim.id) }}">
+                    <button type="submit" class="btn btn-success w-100 mt-3">
+                        <i class="bi bi-check-circle"></i> Release Item
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

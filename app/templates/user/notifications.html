@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Lost and Found System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Notifications</h2>
+
+{% if notifications %}
+<div class="card">
+    <div class="card-body">
+        <div class="list-group">
+            {% for notification in notifications %}
+            <div class="list-group-item {% if not notification.is_read %}list-group-item-action{% endif %}">
+                <div class="d-flex w-100 justify-content-between">
+                    <p class="mb-1">{{ notification.message }}</p>
+                    <small>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                {% if not notification.is_read %}
+                <form method="POST" action="{{ url_for('user.mark_notification_read', notification_id=notification.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-outline-primary mt-2">Mark as Read</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No notifications yet.
+</div>
+{% endif %}
+{% endblock %}

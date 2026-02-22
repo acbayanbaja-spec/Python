@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Matches - Lost and Found System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Item Matches</h2>
+
+{% if matches %}
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Lost Item</th>
+                        <th>Found Item</th>
+                        <th>Match Score</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in matches %}
+                    <tr>
+                        <td>
+                            <strong>{{ match.lost_item.item_name }}</strong><br>
+                            <small class="text-muted">{{ match.lost_item.category }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ match.found_item.item_name }}</strong><br>
+                            <small class="text-muted">{{ match.found_item.category }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info fs-6">{{ match.score }}%</span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ match.status }}">
+                                {{ match.status.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if match.status == 'suggested' %}
+                            <form method="POST" action="{{ url_for('user.confirm_match', match_id=match.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-success">Confirm Match</button>
+                            </form>
+                            {% elif match.status == 'confirmed' %}
+                            <a href="{{ url_for('user.claim_qr', claim_id=match.lost_item.claims.first().id) if match.lost_item.claims.first() else '#' }}" class="btn btn-sm btn-primary">Get QR Code</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    No matches found yet. We'll notify you when we find potential matches for your lost items.
+</div>
+{% endif %}
+{% endblock %}

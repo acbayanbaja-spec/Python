@@ -1,0 +1,23 @@
+# Render Blueprint Configuration
+# This file helps Render automatically configure your app
+
+services:
+  - type: web
+    name: seait-lost-and-found
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+    # Link to your PostgreSQL database
+    # Render will automatically set DATABASE_URL if database is in same account
+
+databases:
+  - name: seait-lost-and-found-db
+    databaseName: seait_lost_and_found
+    user: seait_lost_and_found_user
