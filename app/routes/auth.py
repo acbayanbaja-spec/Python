@@ -72,25 +72,30 @@ def login():
             flash('Email and password are required', 'error')
             return render_template('auth/login.html')
         
-        user = User.query.filter_by(email=email).first()
-        
-        if user and user.check_password(password):
-            login_user(user, remember=remember)
-            flash(f'Welcome back, {user.name}!', 'success')
+        try:
+            user = User.query.filter_by(email=email).first()
             
-            # Redirect based on role
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            
-            if user.is_admin():
-                return redirect(url_for('admin.dashboard'))
-            elif user.is_staff():
-                return redirect(url_for('staff.dashboard'))
+            if user and user.check_password(password):
+                login_user(user, remember=remember)
+                flash(f'Welcome back, {user.name}!', 'success')
+                
+                # Redirect based on role
+                next_page = request.args.get('next')
+                if next_page:
+                    return redirect(next_page)
+                
+                if user.is_admin():
+                    return redirect(url_for('admin.dashboard'))
+                elif user.is_staff():
+                    return redirect(url_for('staff.dashboard'))
+                else:
+                    return redirect(url_for('user.dashboard'))
             else:
-                return redirect(url_for('user.dashboard'))
-        else:
-            flash('Invalid email or password', 'error')
+                flash('Invalid email or password', 'error')
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.error(f"Database error during login: {e}")
+            flash('Database connection error. Please try again later.', 'error')
     
     # Add cache-busting headers to prevent browser caching
     response = make_response(render_template('auth/login.html'))

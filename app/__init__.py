@@ -59,31 +59,46 @@ def create_app(config_name=None):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(api_bp, url_prefix='/api')
     
+    # Health check endpoint (for Render deployment monitoring)
+    @app.route('/health')
+    def health():
+        """Health check endpoint that doesn't require database"""
+        return {'status': 'ok', 'service': 'SEAIT Lost and Found System'}, 200
+    
     # Root route - redirect to login
     @app.route('/')
     def index():
         from flask import redirect, url_for
         from flask_login import current_user
-        if current_user.is_authenticated:
-            # Redirect based on role
-            if current_user.is_admin():
-                return redirect(url_for('admin.dashboard'))
-            elif current_user.is_staff():
-                return redirect(url_for('staff.dashboard'))
-            else:
-                return redirect(url_for('user.dashboard'))
+        try:
+            if current_user.is_authenticated:
+                # Redirect based on role
+                if current_user.is_admin():
+                    return redirect(url_for('admin.dashboard'))
+                elif current_user.is_staff():
+                    return redirect(url_for('staff.dashboard'))
+                else:
+                    return redirect(url_for('user.dashboard'))
+        except Exception as e:
+            # If there's an error, just redirect to login
+            app.logger.error(f"Error in index route: {e}")
         return redirect(url_for('auth.login'))
     
     # Import models to register them with SQLAlchemy
     from app import models
     
     # Create database tables (if they don't exist)
+    # This is done in a try-except to prevent startup failures
     with app.app_context():
         try:
+            # Test database connection first
+            db.engine.connect()
             db.create_all()
+            app.logger.info("Database connection successful and tables created/verified")
         except Exception as e:
-            # Tables may already exist, which is fine
-            pass
+            # Log the error but don't crash the app
+            app.logger.warning(f"Database initialization warning: {e}")
+            app.logger.info("App will continue to run, but database operations may fail")
     
     # Context processor for unread notifications
     @app.context_processor

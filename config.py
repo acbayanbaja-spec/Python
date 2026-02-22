@@ -16,6 +16,9 @@ class Config:
     
     if DATABASE_URL:
         # PostgreSQL (production)
+        # Convert postgres:// to postgresql:// if needed (for newer psycopg2)
+        if DATABASE_URL.startswith('postgres://'):
+            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
         SQLALCHEMY_DATABASE_URI = DATABASE_URL
     else:
         # SQLite (development)
