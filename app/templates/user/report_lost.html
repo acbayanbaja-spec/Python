@@ -2,12 +2,106 @@
 
 {% block title %}Report Lost Item - Lost and Found System{% endblock %}
 
+{% block extra_css %}
+<style>
+    .form-page-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .form-page-header h2 {
+        color: #1a1a2e;
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-page-header p {
+        color: #6c757d;
+    }
+
+    .form-card {
+        border-radius: 1rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        border: none;
+        overflow: hidden;
+    }
+
+    .form-card .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+    }
+
+    .form-card .card-header h4 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label .text-danger {
+        color: #dc3545;
+    }
+
+    .image-preview-container {
+        border: 2px dashed #dee2e6;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        text-align: center;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .image-preview-container:hover {
+        border-color: #FF6B35;
+        background: #fff;
+    }
+
+    .image-preview-container img {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #FF6B35, #F7931E);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="form-page-header">
+    <h2><i class="bi bi-plus-circle"></i> Report Lost Item</h2>
+    <p>Help us find your lost item by providing detailed information</p>
+</div>
+
 <div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
+    <div class="col-md-10 col-lg-8 mx-auto">
+        <div class="card form-card">
             <div class="card-header">
-                <h4 class="mb-0">Report Lost Item</h4>
+                <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Item Details</h4>
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
@@ -52,16 +146,51 @@
                     </div>
                     <div class="mb-3">
                         <label for="image" class="form-label">Item Image</label>
-                        <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                        <small class="form-text text-muted">Upload an image of the item (optional)</small>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*" onchange="previewImage(this)">
+                        <small class="form-text text-muted">Upload an image of the item (optional, max 16MB)</small>
+                        <div class="image-preview-container mt-3" id="imagePreview" style="display: none;">
+                            <img id="previewImg" src="" alt="Preview">
+                        </div>
                     </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Submit Report</button>
-                        <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-submit text-white">
+                            <i class="bi bi-check-circle"></i> Submit Report
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+    function previewImage(input) {
+        const preview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'flex';
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    // Set today as max date for date_lost
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('date_lost');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.setAttribute('max', today);
+        }
+    });
+</script>
 {% endblock %}

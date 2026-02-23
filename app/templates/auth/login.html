@@ -145,15 +145,17 @@
             animation: fadeInLeft 1s ease-out;
         }
 
-        .logo-container img {
+        .logo-img {
             max-width: 200px;
             height: auto;
             display: block;
             animation: logoFloat 3s ease-in-out infinite;
             transition: transform 0.3s ease;
+            will-change: transform;
+            backface-visibility: hidden;
         }
 
-        .logo-container img:hover {
+        .logo-img:hover {
             transform: scale(1.1) rotate(5deg);
         }
 
@@ -238,11 +240,18 @@
             outline: none;
             border-color: #FF6B35;
             box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
-            transform: translateY(-2px);
+            /* Removed transform to prevent typing lag */
         }
 
         .form-control:hover {
             border-color: #FF6B35;
+        }
+
+        /* Optimize for performance - use GPU acceleration */
+        .form-control {
+            will-change: border-color, box-shadow;
+            backface-visibility: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         .form-control::placeholder {
@@ -552,7 +561,8 @@
                 <div class="logo-container">
                     <img src="{{ url_for('static', filename='images/seait-logo.jpg') }}" 
                          alt="SEAIT Logo" 
-                         style="max-width: 200px; height: auto;"
+                         class="logo-img"
+                         loading="lazy"
                          onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMDAiIGN5PSIxMDAiIHI9IjEwMCIgZmlsbD0iI0ZGNkIzNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNDgiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlNFQVJUPC90ZXh0Pjwvc3ZnPg==';">
                 </div>
                 <h2 class="promo-text">
@@ -651,19 +661,7 @@
                     <div class="team-member-role">Manager</div>
                 </div>
 
-                <!-- Team Member 4 -->
-                <div class="team-member">
-                    <div class="team-member-photo">
-                        <img src="{{ url_for('static', filename='images/team/member4.jpg') }}" 
-                             alt="Team Member 4"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <i class="bi bi-person-fill" style="display: none;"></i>
-                    </div>
-                    <div class="team-member-name">Team Member 4</div>
-                    <div class="team-member-role">Support</div>
-                </div>
-
-                <!-- Add more team members as needed -->
+                <!-- Only 3 team members available -->
             </div>
         </div>
     </div>
@@ -732,16 +730,9 @@
             });
         });
 
-        // Input focus animations
-        document.querySelectorAll('.form-control').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-                this.parentElement.style.transition = 'transform 0.3s ease';
-            });
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = '';
-            });
-        });
+        // Optimized input handling - no expensive operations on focus
+        // Removed scale transform to prevent typing lag
+        // Using CSS-only focus styles for better performance
     </script>
 </body>
 </html>

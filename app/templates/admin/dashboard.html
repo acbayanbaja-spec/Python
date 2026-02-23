@@ -2,69 +2,143 @@
 
 {% block title %}Admin Dashboard - Lost and Found System{% endblock %}
 
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #FF6B35;
+    }
+
+    .dashboard-header h2 {
+        color: #1a1a2e;
+        font-weight: 700;
+        font-size: 2rem;
+    }
+
+    .stat-card {
+        border-radius: 1rem;
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        transition: all 0.5s ease;
+    }
+
+    .stat-card:hover::before {
+        top: -30%;
+        right: -30%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-card-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stat-card-info { background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%); }
+    .stat-card-success { background: linear-gradient(135deg, #198754 0%, #146c43 100%); }
+    .stat-card-warning { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: #000; }
+    .stat-card-secondary { background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); }
+
+    .stat-card h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card h2, .stat-card h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .stat-card i {
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3rem;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2 class="mb-4">Admin Dashboard</h2>
+<div class="dashboard-header">
+    <h2><i class="bi bi-shield-check"></i> Admin Dashboard</h2>
+    <p class="text-muted">System overview and management</p>
+</div>
 
 <!-- Statistics Cards -->
-<div class="row mb-4">
+<div class="row mb-4 g-4">
     <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">Total Lost Items</h5>
-                <h2>{{ total_lost }}</h2>
-            </div>
+        <div class="stat-card stat-card-primary">
+            <i class="bi bi-box-seam"></i>
+            <h5>Total Lost Items</h5>
+            <h2>{{ total_lost }}</h2>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-info">
-            <div class="card-body">
-                <h5 class="card-title">Total Found Items</h5>
-                <h2>{{ total_found }}</h2>
-            </div>
+        <div class="stat-card stat-card-info">
+            <i class="bi bi-inbox"></i>
+            <h5>Total Found Items</h5>
+            <h2>{{ total_found }}</h2>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">Matched Items</h5>
-                <h2>{{ total_matched }}</h2>
-            </div>
+        <div class="stat-card stat-card-success">
+            <i class="bi bi-diagram-3"></i>
+            <h5>Matched Items</h5>
+            <h2>{{ total_matched }}</h2>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title">Claimed Items</h5>
-                <h2>{{ total_claimed }}</h2>
-            </div>
+        <div class="stat-card stat-card-warning">
+            <i class="bi bi-check-circle"></i>
+            <h5>Claimed Items</h5>
+            <h2>{{ total_claimed }}</h2>
         </div>
     </div>
 </div>
 
 <!-- User Statistics -->
-<div class="row mb-4">
+<div class="row mb-4 g-4">
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Total Users</h5>
-                <h3>{{ total_users }}</h3>
-            </div>
+        <div class="stat-card stat-card-secondary">
+            <i class="bi bi-people"></i>
+            <h5>Total Users</h5>
+            <h3>{{ total_users }}</h3>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Students</h5>
-                <h3>{{ total_students }}</h3>
-            </div>
+        <div class="stat-card stat-card-info">
+            <i class="bi bi-person-badge"></i>
+            <h5>Students</h5>
+            <h3>{{ total_students }}</h3>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Staff</h5>
-                <h3>{{ total_staff }}</h3>
-            </div>
+        <div class="stat-card stat-card-primary">
+            <i class="bi bi-person-check"></i>
+            <h5>Staff</h5>
+            <h3>{{ total_staff }}</h3>
         </div>
     </div>
 </div>

@@ -2,33 +2,117 @@
 
 {% block title %}Student Dashboard - Lost and Found System{% endblock %}
 
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #FF6B35;
+    }
+
+    .dashboard-header h2 {
+        color: #1a1a2e;
+        font-weight: 700;
+        font-size: 2rem;
+    }
+
+    .stat-card {
+        border-radius: 1rem;
+        padding: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        transition: all 0.5s ease;
+    }
+
+    .stat-card:hover::before {
+        top: -30%;
+        right: -30%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-card-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-card-info {
+        background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
+    }
+
+    .stat-card-success {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    }
+
+    .stat-card h5 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .stat-card i {
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3rem;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2 class="mb-4">Student Dashboard</h2>
+<div class="dashboard-header">
+    <h2><i class="bi bi-speedometer2"></i> Student Dashboard</h2>
+    <p class="text-muted">Welcome back, {{ current_user.name }}! Here's your overview.</p>
+</div>
 
 <!-- Statistics Cards -->
-<div class="row mb-4">
+<div class="row mb-4 g-4">
     <div class="col-md-4">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">Total Lost Items</h5>
-                <h2>{{ total_lost }}</h2>
-            </div>
+        <div class="stat-card stat-card-primary">
+            <i class="bi bi-box-seam"></i>
+            <h5>Total Lost Items</h5>
+            <h2>{{ total_lost }}</h2>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card text-white bg-info">
-            <div class="card-body">
-                <h5 class="card-title">Matched Items</h5>
-                <h2>{{ matched_items }}</h2>
-            </div>
+        <div class="stat-card stat-card-info">
+            <i class="bi bi-diagram-3"></i>
+            <h5>Matched Items</h5>
+            <h2>{{ matched_items }}</h2>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">Claimed Items</h5>
-                <h2>{{ claimed_items }}</h2>
-            </div>
+        <div class="stat-card stat-card-success">
+            <i class="bi bi-check-circle"></i>
+            <h5>Claimed Items</h5>
+            <h2>{{ claimed_items }}</h2>
         </div>
     </div>
 </div>
@@ -36,7 +120,7 @@
 <!-- Recent Lost Items -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Recent Lost Items</h5>
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Lost Items</h5>
         <a href="{{ url_for('user.report_lost') }}" class="btn btn-sm btn-primary">
             <i class="bi bi-plus-circle"></i> Report New Item
         </a>
