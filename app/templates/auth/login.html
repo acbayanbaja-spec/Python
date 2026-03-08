@@ -28,11 +28,14 @@
             display: flex;
             min-height: 100vh;
             position: relative;
+            padding: 40px 60px;
+            background: linear-gradient(135deg, #FFE5D9 0%, #FFD4C4 50%, #FFC4AF 100%);
+            box-sizing: border-box;
         }
 
         /* Left Section - Orange Background */
         .left-section {
-            flex: 0 0 66.666%;
+            flex: 0 0 60%;
             background: linear-gradient(135deg, #FFE5D9 0%, #FFD4C4 50%, #FFC4AF 100%);
             display: flex;
             flex-direction: column;
@@ -174,29 +177,65 @@
             animation: fadeInUp 1s ease-out 0.7s both;
         }
 
-        .mission-vision-text {
+        .mission-vision-heading {
             font-size: 36px;
             font-weight: 700;
             color: #FF6B35;
             text-shadow: 2px 2px 4px rgba(255, 107, 53, 0.2);
+            margin-bottom: 16px;
+        }
+
+        .mission-vision-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 620px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .mission-item {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 14px;
+            padding: 10px 16px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .mission-item-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #FF6B35;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .mission-item-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #4b4f56;
         }
 
         /* Right Section - White Background */
         .right-section {
-            flex: 0 0 33.334%;
-            background: #ffffff;
+            flex: 0 0 40%;
+            background: transparent;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            padding: 60px 50px;
+            align-items: flex-end;
+            padding: 20px 10px 20px 40px;
             position: relative;
             animation: fadeInRight 1s ease-out 0.2s both;
         }
 
         .login-card {
             width: 100%;
-            max-width: 420px;
+            max-width: 460px;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            padding: 32px 32px 28px;
             animation: fadeInUp 1s ease-out 0.4s both;
         }
 
@@ -496,6 +535,7 @@
         .team-member:nth-child(3) { animation-delay: 1.8s; }
         .team-member:nth-child(4) { animation-delay: 1.9s; }
         .team-member:nth-child(5) { animation-delay: 2s; }
+        .team-member:nth-child(6) { animation-delay: 2.1s; }
 
         .team-member:hover {
             transform: translateY(-10px);
@@ -756,6 +796,7 @@
         @media (max-width: 1024px) {
             .main-container {
                 flex-direction: column;
+                padding: 30px 24px;
             }
 
             .left-section {
@@ -779,6 +820,10 @@
         }
 
         @media (max-width: 768px) {
+            .main-container {
+                padding: 20px 16px;
+            }
+
             .left-section {
                 padding: 30px 20px;
             }
@@ -792,7 +837,7 @@
                 margin-bottom: 30px;
             }
 
-            .mission-vision-text {
+            .mission-vision-heading {
                 font-size: 24px;
             }
 
@@ -881,7 +926,21 @@
                 </div>
 
                 <div class="mission-vision">
-                    <div class="mission-vision-text">Mission & Vision</div>
+                    <div class="mission-vision-heading">Mission & Vision</div>
+                    <div class="mission-vision-content">
+                        <div class="mission-item">
+                            <div class="mission-item-title">Mission</div>
+                            <p class="mission-item-text">
+                                To produce competent, community-oriented, and globally competitive graduates.
+                            </p>
+                        </div>
+                        <div class="mission-item">
+                            <div class="mission-item-title">Vision</div>
+                            <p class="mission-item-text">
+                                A premier institution that provides quality education and produces globally empowered individuals.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -999,6 +1058,18 @@
                     </div>
                     <div class="team-member-name">Team Member 5</div>
                     <div class="team-member-role">Specialist</div>
+                </div>
+
+                <!-- Team Member 6 -->
+                <div class="team-member">
+                    <div class="team-member-photo">
+                        <img src="{{ url_for('static', filename='images/team/member6.jpg') }}" 
+                             alt="Team Member 6"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="bi bi-person-fill" style="display: none;"></i>
+                    </div>
+                    <div class="team-member-name">Team Member 6</div>
+                    <div class="team-member-role">Coordinator</div>
                 </div>
             </div>
         </div>
