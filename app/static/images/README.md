@@ -17,7 +17,8 @@ Place team member photos in the `team/` directory:
 1. `member1.jpg` - Team Member 1 (Developer)
 2. `member2.jpg` - Team Member 2 (Designer)
 3. `member3.jpg` - Team Member 3 (Manager)
-4. `member4.jpg` - Team Member 4 (Support)
+4. `member4.jpg` - Team Member 4 (Analyst)
+5. `member5.jpg` - Team Member 5 (Specialist)
 
 To add more team members:
 1. Add the image file to `team/` directory
