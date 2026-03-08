@@ -216,15 +216,17 @@
             color: #4b4f56;
         }
 
-        /* Right Section - White Background */
+        /* Right Section - White Container (same height as left) */
         .right-section {
             flex: 0 0 40%;
-            background: transparent;
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: flex-end;
-            padding: 20px 10px 20px 40px;
+            align-items: center;
+            padding: 40px 40px 36px;
             position: relative;
             animation: fadeInRight 1s ease-out 0.2s both;
         }
@@ -232,10 +234,10 @@
         .login-card {
             width: 100%;
             max-width: 460px;
-            background: #ffffff;
-            border-radius: 28px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-            padding: 32px 32px 28px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             animation: fadeInUp 1s ease-out 0.4s both;
         }
 
@@ -829,7 +831,9 @@
             }
 
             .right-section {
+                margin-top: 20px;
                 padding: 30px 20px;
+                border-radius: 24px;
             }
 
             .system-title {
@@ -1022,7 +1026,7 @@
                     </div>
                     <div class="team-member-name">Johnrey Fanugon</div>
                     <div class="team-member-role">Designer</div>
-                </div>
+                </div>  
 
                 <!-- Team Member 3 -->
                 <div class="team-member">
