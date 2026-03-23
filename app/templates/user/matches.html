@@ -2,61 +2,151 @@
 
 {% block title %}Matches - Lost and Found System{% endblock %}
 
-{% block content %}
-<h2 class="mb-4">Item Matches</h2>
+{% block extra_css %}
+<style>
+    .match-stage { max-width: 760px; margin: 0 auto; }
+    .card-stack { position: relative; min-height: 500px; perspective: 1200px; }
+    .match-card {
+        position: absolute; width: 100%;
+        border-radius: 18px; background: #fff;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+        padding: 1.2rem;
+        transition: transform 0.35s ease, opacity 0.35s ease;
+        transform-origin: center; will-change: transform, opacity;
+    }
+    .match-card.hidden { opacity: 0; transform: translateX(-40px) rotate(-8deg) scale(0.95); pointer-events: none; }
+    .match-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .7rem; }
+    .score-pill { font-weight: 700; padding: .45rem .8rem; border-radius: 999px; color: #fff; background: linear-gradient(135deg, #0d6efd, #198754); font-size: .95rem; }
+    .confidence-bar { height: 10px; border-radius: 999px; background: #e9ecef; overflow: hidden; margin-bottom: 1rem; }
+    .confidence-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #FF6B35, #F7931E); transition: width .4s ease; }
+    .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+    .item-box { border: 1px solid #e9ecef; border-radius: 12px; padding: .8rem; background: #fafbff; }
+    .item-label { font-size: .75rem; text-transform: uppercase; color: #6c757d; font-weight: 700; letter-spacing: .04em; margin-bottom: .25rem; }
+    .item-title { font-weight: 700; margin-bottom: .35rem; }
+    .item-desc { font-size: .9rem; color: #495057; }
+    .card-actions { display: flex; gap: .75rem; margin-top: 1.1rem; }
+    .btn-skip { background: #dc3545; color: #fff; border: none; }
+    .btn-skip:hover { background: #bb2d3b; color: #fff; }
+    .empty-state { border-radius: 14px; background: #e7f8ff; padding: 1rem; }
+    @media (max-width: 768px) { .item-grid { grid-template-columns: 1fr; } .card-stack { min-height: 620px; } }
+    @media (prefers-reduced-motion: reduce) { .match-card, .confidence-fill { transition: none !important; } }
+</style>
+{% endblock %}
 
-{% if matches %}
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Lost Item</th>
-                        <th>Found Item</th>
-                        <th>Match Score</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for match in matches %}
-                    <tr>
-                        <td>
-                            <strong>{{ match.lost_item.item_name }}</strong><br>
-                            <small class="text-muted">{{ match.lost_item.category }}</small>
-                        </td>
-                        <td>
-                            <strong>{{ match.found_item.item_name }}</strong><br>
-                            <small class="text-muted">{{ match.found_item.category }}</small>
-                        </td>
-                        <td>
-                            <span class="badge bg-info fs-6">{{ match.score }}%</span>
-                        </td>
-                        <td>
-                            <span class="status-badge status-{{ match.status }}">
-                                {{ match.status.title() }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if match.status == 'suggested' %}
-                            <form method="POST" action="{{ url_for('user.confirm_match', match_id=match.id) }}" style="display: inline;">
-                                <button type="submit" class="btn btn-sm btn-success">Confirm Match</button>
-                            </form>
-                            {% elif match.status == 'confirmed' %}
-                            <a href="{{ url_for('user.claim_qr', claim_id=match.lost_item.claims.first().id) if match.lost_item.claims.first() else '#' }}" class="btn btn-sm btn-primary">Get QR Code</a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+{% block content %}
+<h2 class="mb-3">Smart Match Review</h2>
+<p class="text-muted mb-4">Review suggested found items one by one.</p>
+
+<div class="match-stage">
+    {% if suggested_matches %}
+    <div class="card-stack" id="cardStack">
+        {% for match in suggested_matches %}
+        <div class="match-card" data-index="{{ loop.index0 }}" style="z-index: {{ 100 - loop.index0 }};">
+            <div class="match-card-top">
+                <h5 class="mb-0">Potential Match #{{ loop.index }}</h5>
+                <span class="score-pill">{{ '%.1f'|format(match.score) }}% Match</span>
+            </div>
+
+            <div class="confidence-bar">
+                <div class="confidence-fill" style="width: {{ match.score }}%;"></div>
+            </div>
+
+            <div class="item-grid">
+                <div class="item-box">
+                    <div class="item-label">Your Lost Item</div>
+                    <div class="item-title">{{ match.lost_item.item_name }}</div>
+                    <div class="item-desc">
+                        Category: {{ match.lost_item.category }}<br>
+                        Color: {{ match.lost_item.color or 'N/A' }}<br>
+                        {{ match.lost_item.description or 'No description provided.' }}
+                    </div>
+                </div>
+                <div class="item-box">
+                    <div class="item-label">Found Item</div>
+                    <div class="item-title">{{ match.found_item.item_name }}</div>
+                    <div class="item-desc">
+                        Category: {{ match.found_item.category }}<br>
+                        Color: {{ match.found_item.color or 'N/A' }}<br>
+                        {{ match.found_item.description or 'No description provided.' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <form method="POST" action="{{ url_for('user.skip_match', match_id=match.id) }}" class="w-50">
+                    <button type="submit" class="btn btn-skip w-100">
+                        <i class="bi bi-x-circle"></i> Skip
+                    </button>
+                </form>
+
+                <form method="POST" action="{{ url_for('user.confirm_match', match_id=match.id) }}" class="w-50">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-check-circle"></i> Confirm Match
+                    </button>
+                </form>
+            </div>
         </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        No suggested matches right now. We’ll notify you when new potential matches are detected.
+    </div>
+    {% endif %}
+</div>
+
+{% if history_matches %}
+<div class="card mt-4">
+    <div class="card-header">Match History</div>
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Lost Item</th>
+                    <th>Found Item</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in history_matches %}
+                <tr>
+                    <td>{{ match.lost_item.item_name }}</td>
+                    <td>{{ match.found_item.item_name }}</td>
+                    <td>{{ '%.1f'|format(match.score) }}%</td>
+                    <td><span class="status-badge status-{{ match.status }}">{{ match.status.title() }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
-{% else %}
-<div class="alert alert-info">
-    No matches found yet. We'll notify you when we find potential matches for your lost items.
-</div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const stack = document.getElementById('cardStack');
+        if (!stack) return;
+
+        const cards = Array.from(stack.querySelectorAll('.match-card'));
+        let current = 0;
+
+        function showOnlyCurrent() {
+            cards.forEach((card, idx) => {
+                if (idx < current) {
+                    card.classList.add('hidden');
+                } else {
+                    card.classList.remove('hidden');
+                    const depth = idx - current;
+                    card.style.transform = `translateY(${depth * 6}px) scale(${1 - depth * 0.02})`;
+                    card.style.opacity = `${1 - depth * 0.12}`;
+                }
+            });
+        }
+
+        showOnlyCurrent();
+    })();
+</script>
 {% endblock %}

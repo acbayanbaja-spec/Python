@@ -159,12 +159,20 @@ def my_items():
 @user_bp.route('/matches')
 @login_required
 def matches():
-    """View matches for user's lost items"""
-    matches = Match.query.join(LostItem)\
+    """Tinder-style view: show suggested matches one by one and list history below"""
+    suggested_matches = Match.query.join(LostItem)\
         .filter(LostItem.user_id == current_user.id)\
+        .filter(Match.status == 'suggested')\
         .order_by(Match.score.desc(), Match.created_at.desc()).all()
+
+    history_matches = Match.query.join(LostItem)\
+        .filter(LostItem.user_id == current_user.id)\
+        .filter(Match.status.in_(['confirmed', 'rejected']))\
+        .order_by(Match.created_at.desc()).all()
     
-    return render_template('user/matches.html', matches=matches)
+    return render_template('user/matches.html',
+                           suggested_matches=suggested_matches,
+                           history_matches=history_matches)
 
 @user_bp.route('/confirm-match/<int:match_id>', methods=['POST'])
 @login_required
@@ -201,6 +209,24 @@ def confirm_match(match_id):
     flash('Match confirmed! You can now generate a claim QR code.', 'success')
     return redirect(url_for('user.claim_qr', claim_id=claim.id))
 
+@user_bp.route('/skip-match/<int:match_id>', methods=['POST'])
+@login_required
+def skip_match(match_id):
+    """Reject/skip a suggested match"""
+    match = Match.query.get_or_404(match_id)
+    
+    # Verify ownership
+    if match.lost_item.user_id != current_user.id:
+        flash('Unauthorized', 'error')
+        return redirect(url_for('user.matches'))
+    
+    if match.status == 'suggested':
+        match.status = 'rejected'
+        db.session.commit()
+        flash('Match skipped.', 'info')
+    
+    return redirect(url_for('user.matches'))
+
 @user_bp.route('/claim-qr/<int:claim_id>')
 @login_required
 def claim_qr(claim_id):
@@ -213,7 +239,7 @@ def claim_qr(claim_id):
         return redirect(url_for('user.dashboard'))
     
     # Generate QR code
-    qr_code = QRService.generate_qr_code_for_claim(claim.claim_code)
+    qr_code = QRService.generate_qr_code_for_claim(claim.claim_code, claim.id)
     
     return render_template('user/claim_qr.html', claim=claim, qr_code=qr_code)
 

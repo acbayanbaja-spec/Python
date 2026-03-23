@@ -2,31 +2,45 @@
 
 {% block title %}Claim QR Code - Lost and Found System{% endblock %}
 
+{% block extra_css %}
+<style>
+    .qr-wrap { max-width: 700px; margin: 0 auto; }
+    .qr-card { border-radius: 18px; box-shadow: 0 14px 35px rgba(0,0,0,0.12); overflow: hidden; }
+    .qr-header { background: linear-gradient(135deg, #0d6efd, #6610f2); color: #fff; padding: 1rem 1.25rem; }
+    .qr-box { background: #fff; border-radius: 12px; border: 1px solid #e9ecef; padding: 1rem; display: inline-block; }
+    .claim-code { font-size: 1rem; font-weight: 700; letter-spacing: .04em; background: #f8f9fa; padding: .35rem .6rem; border-radius: 8px; }
+    .hint { font-size: .92rem; color: #6c757d; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header text-center">
-                <h4 class="mb-0">Claim QR Code</h4>
+<div class="qr-wrap">
+    <div class="card qr-card">
+        <div class="qr-header text-center">
+            <h4 class="mb-0"><i class="bi bi-qr-code"></i> Claim QR Pass</h4>
+        </div>
+        <div class="card-body text-center">
+            <p class="mb-2">Item: <strong>{{ claim.lost_item.item_name }}</strong></p>
+            <p class="mb-3">Claim Code: <span class="claim-code">{{ claim.claim_code }}</span></p>
+
+            <div class="qr-box my-3">
+                <img src="data:image/png;base64,{{ qr_code }}"
+                     alt="Claim QR Code"
+                     class="img-fluid"
+                     style="max-width: 320px;">
             </div>
-            <div class="card-body text-center">
-                <p class="lead">Item: <strong>{{ claim.lost_item.item_name }}</strong></p>
-                <p>Claim Code: <code>{{ claim.claim_code }}</code></p>
-                
-                <div class="my-4">
-                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-fluid" style="max-width: 300px;">
-                </div>
-                
-                <p class="text-muted">
-                    Present this QR code to the Lost and Found office to claim your item.
-                </p>
-                
-                <div class="d-grid gap-2">
-                    <button onclick="window.print()" class="btn btn-primary">
-                        <i class="bi bi-printer"></i> Print QR Code
-                    </button>
-                    <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
-                </div>
+
+            <p class="hint mb-4">
+                Present this QR code at the Lost & Found office. Keep this code private.
+            </p>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+                <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary">
+                    Back to Dashboard
+                </a>
             </div>
         </div>
     </div>

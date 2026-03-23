@@ -6,7 +6,9 @@ import io
 import base64
 import secrets
 import string
-from PIL import Image
+import json
+from datetime import datetime
+from PIL import Image  # kept for pillow import availability
 
 class QRService:
     """Service for QR code generation and management"""
@@ -14,22 +16,31 @@ class QRService:
     @staticmethod
     def generate_claim_code() -> str:
         """Generate a unique claim code"""
-        # Generate 12-character alphanumeric code
         alphabet = string.ascii_uppercase + string.digits
-        code = ''.join(secrets.choice(alphabet) for _ in range(12))
-        return code
+        return ''.join(secrets.choice(alphabet) for _ in range(12))
     
     @staticmethod
-    def generate_qr_code(data: str) -> str:
+    def _build_claim_payload(claim_code: str, claim_id: int = None) -> str:
+        """Create a compact JSON payload for QR contents"""
+        payload = {
+            "type": "SEAIT_CLAIM",
+            "claim_code": claim_code,
+            "claim_id": claim_id,
+            "issued_at": datetime.utcnow().isoformat() + "Z"
+        }
+        return json.dumps(payload, separators=(",", ":"))
+
+    @staticmethod
+    def generate_qr_code(data: str, box_size: int = 11, border: int = 4) -> str:
         """
-        Generate QR code image as base64 string
-        Returns base64 encoded image data
+        Generate QR code image as base64 string with high error correction.
+        Returns base64 encoded image data.
         """
         qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_Q,
+            box_size=box_size,
+            border=border,
         )
         qr.add_data(data)
         qr.make(fit=True)
@@ -39,12 +50,13 @@ class QRService:
         
         # Convert to base64
         buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
+        img.save(buffer, format='PNG', optimize=True)
         img_str = base64.b64encode(buffer.getvalue()).decode()
         
         return img_str
     
     @staticmethod
-    def generate_qr_code_for_claim(claim_code: str) -> str:
-        """Generate QR code for a claim code"""
-        return QRService.generate_qr_code(claim_code)
+    def generate_qr_code_for_claim(claim_code: str, claim_id: int = None) -> str:
+        """Generate QR code for a claim code with metadata payload"""
+        payload = QRService._build_claim_payload(claim_code=claim_code, claim_id=claim_id)
+        return QRService.generate_qr_code(payload, box_size=11, border=4)
