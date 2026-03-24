@@ -11,25 +11,25 @@ class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
-    # Database configuration
+    # ✅ FORCE PostgreSQL (Render production)
     DATABASE_URL = os.environ.get('DATABASE_URL')
-    
-    if DATABASE_URL:
-        # PostgreSQL (production)
-        # Convert postgres:// to postgresql:// if needed (for newer psycopg2)
-        if DATABASE_URL.startswith('postgres://'):
-            DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-        SQLALCHEMY_DATABASE_URI = DATABASE_URL
-    else:
-        # SQLite (development)
-        SQLALCHEMY_DATABASE_URI = f'sqlite:///{basedir / "lost_found.db"}'
-    
+
+    # 🔥 Fallback to your ACTUAL Render database if env variable is missing
+    if not DATABASE_URL:
+        DATABASE_URL = "postgresql://python_uav0_user:hoXETU46jC6RQz9L0ttnMyDOarW5pjxV@dpg-d711ekvfte5s739rume0-a.singapore-postgres.render.com:5432/python_uav0"
+
+    # ✅ Fix old postgres:// format
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     
     # Upload configuration
     UPLOAD_FOLDER = basedir / 'app' / 'static' / 'uploads'
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     
     # Session configuration
@@ -40,19 +40,19 @@ class Config:
     # Pagination
     ITEMS_PER_PAGE = 20
 
+
 class DevelopmentConfig(Config):
-    """Development configuration"""
     DEBUG = True
     SQLALCHEMY_ECHO = True
 
+
 class ProductionConfig(Config):
-    """Production configuration"""
     DEBUG = False
     SQLALCHEMY_ECHO = False
 
-# Configuration dictionary
+
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig
+    'default': ProductionConfig  # ✅ force production
 }
