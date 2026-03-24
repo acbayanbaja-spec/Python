@@ -50,8 +50,8 @@ def dashboard():
 @login_required
 def report_lost():
     """Report a lost item"""
-    if request.method == 'POST':
-        try:
+    try:
+        if request.method == 'POST':
             item_name = (request.form.get('item_name') or '').strip()
             description = (request.form.get('description') or '').strip()
             category = (request.form.get('category') or '').strip()
@@ -131,24 +131,29 @@ def report_lost():
 
             db.session.commit()
 
-            # Notify user after successful transaction
+            # Notify user after successful transaction. Keep reporting flow alive even
+            # if notification insert fails for any reason.
             for match_data in matches[:5]:
-                NotificationService.notify_match_found(
-                    current_user.id,
-                    lost_item.item_name,
-                    match_data['score']
-                )
+                try:
+                    NotificationService.notify_match_found(
+                        current_user.id,
+                        lost_item.item_name,
+                        match_data['score']
+                    )
+                except Exception:
+                    from flask import current_app
+                    current_app.logger.exception('Notification insert failed in report_lost')
 
             flash('Lost item reported successfully! We will notify you if we find a match.', 'success')
             return redirect(url_for('user.dashboard'))
-        except Exception:
-            db.session.rollback()
-            from flask import current_app
-            current_app.logger.exception('Error in report_lost route')
-            flash('Something went wrong while submitting your report. Please try again.', 'error')
-            return render_template('user/report_lost.html')
-    
-    return render_template('user/report_lost.html')
+        
+        return render_template('user/report_lost.html')
+    except Exception:
+        db.session.rollback()
+        from flask import current_app
+        current_app.logger.exception('Error in report_lost route')
+        flash('Something went wrong while opening/submitting Report Lost Item. Please try again.', 'error')
+        return redirect(url_for('user.dashboard'))
 
 @user_bp.route('/my-items')
 @login_required

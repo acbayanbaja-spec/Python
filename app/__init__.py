@@ -83,6 +83,37 @@ def create_app(config_name=None):
             # If there's an error, just redirect to login
             app.logger.error(f"Error in index route: {e}")
         return redirect(url_for('auth.login'))
+
+    @app.errorhandler(413)
+    def request_entity_too_large(error):
+        from flask import request, redirect, url_for, flash
+        from flask_login import current_user
+        app.logger.warning(f"413 Payload too large at {request.path}: {error}")
+        flash('Uploaded file is too large. Maximum allowed size is 16MB.', 'error')
+        # Redirect back if possible, fallback to dashboard/login
+        ref = request.referrer
+        if ref:
+            return redirect(ref)
+        return redirect(url_for('user.dashboard') if current_user.is_authenticated else url_for('auth.login'))
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        from flask import request, redirect, url_for, flash
+        from flask_login import current_user
+        # Ensure failed transactions do not poison the session for next requests
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        app.logger.exception(f"500 Internal Server Error at {request.path}: {error}")
+        flash('Unexpected server issue occurred. Please try again.', 'error')
+        if current_user.is_authenticated:
+            if current_user.is_admin():
+                return redirect(url_for('admin.dashboard'))
+            if current_user.is_staff():
+                return redirect(url_for('staff.dashboard'))
+            return redirect(url_for('user.dashboard'))
+        return redirect(url_for('auth.login'))
     
     # Import models to register them with SQLAlchemy
     from app import models
