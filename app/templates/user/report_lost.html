@@ -4,9 +4,21 @@
 
 {% block extra_css %}
 <style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
     .form-page-header {
         margin-bottom: 2rem;
         text-align: center;
+        animation: fadeInUp 0.45s ease-out both;
     }
 
     .form-page-header h2 {
@@ -25,6 +37,7 @@
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         border: none;
         overflow: hidden;
+        animation: fadeInUp 0.5s ease-out 0.08s both;
     }
 
     .form-card .card-header {
@@ -88,6 +101,25 @@
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
     }
+
+    .btn-submit:disabled {
+        opacity: 0.75;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        transform: translateY(-1px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -104,7 +136,7 @@
                 <h4 class="mb-0"><i class="bi bi-file-earmark-text"></i> Item Details</h4>
             </div>
             <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" id="reportLostForm">
                     <div class="mb-3">
                         <label for="item_name" class="form-label">Item Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="item_name" name="item_name" required>
@@ -154,7 +186,7 @@
                     </div>
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
-                        <button type="submit" class="btn btn-submit text-white">
+                        <button type="submit" class="btn btn-submit text-white" id="submitButton">
                             <i class="bi bi-check-circle"></i> Submit Report
                         </button>
                     </div>
@@ -163,6 +195,7 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -184,12 +217,22 @@
         }
     }
 
-    // Set today as max date for date_lost
+    // Set today as max date for date_lost and add lightweight submit feedback
     document.addEventListener('DOMContentLoaded', function() {
         const dateInput = document.getElementById('date_lost');
         if (dateInput) {
             const today = new Date().toISOString().split('T')[0];
             dateInput.setAttribute('max', today);
+        }
+
+        const form = document.getElementById('reportLostForm');
+        const submitButton = document.getElementById('submitButton');
+
+        if (form && submitButton) {
+            form.addEventListener('submit', function() {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting...';
+            });
         }
     });
 </script>

@@ -51,91 +51,102 @@ def dashboard():
 def report_lost():
     """Report a lost item"""
     if request.method == 'POST':
-        item_name = request.form.get('item_name')
-        description = request.form.get('description')
-        category = request.form.get('category')
-        color = request.form.get('color')
-        date_lost = request.form.get('date_lost')
-        location_lost = request.form.get('location_lost')
-        image = request.files.get('image')
-        
-        # Validation
-        if not item_name or not category or not date_lost:
-            flash('Item name, category, and date lost are required', 'error')
-            return render_template('user/report_lost.html')
-        
         try:
-            date_lost_obj = datetime.strptime(date_lost, '%Y-%m-%d').date()
-        except ValueError:
-            flash('Invalid date format', 'error')
+            item_name = (request.form.get('item_name') or '').strip()
+            description = (request.form.get('description') or '').strip()
+            category = (request.form.get('category') or '').strip()
+            color = (request.form.get('color') or '').strip()
+            date_lost = (request.form.get('date_lost') or '').strip()
+            location_lost = (request.form.get('location_lost') or '').strip()
+            image = request.files.get('image')
+
+            # Validation
+            if not item_name or not category or not date_lost:
+                flash('Item name, category, and date lost are required', 'error')
+                return render_template('user/report_lost.html')
+
+            try:
+                date_lost_obj = datetime.strptime(date_lost, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Invalid date format', 'error')
+                return render_template('user/report_lost.html')
+
+            # Save image if provided
+            image_path = None
+            if image and image.filename:
+                image_path = save_uploaded_file(image)
+                if image_path is None:
+                    flash('Invalid image format. Allowed: png, jpg, jpeg, gif, webp', 'error')
+                    return render_template('user/report_lost.html')
+
+            # Create lost item
+            lost_item = LostItem(
+                user_id=current_user.id,
+                item_name=item_name,
+                description=description or None,
+                category=category,
+                color=color or None,
+                date_lost=date_lost_obj,
+                location_lost=location_lost or None,
+                image_path=image_path,
+                status='pending'
+            )
+
+            db.session.add(lost_item)
+            db.session.flush()
+
+            # Run AI matching
+            matcher = LostFoundMatcher()
+            from app.models.found_item import FoundItem
+            found_items = FoundItem.query.filter_by(status='available').all()
+
+            # Convert to dict format for matcher
+            found_items_dict = [{
+                'id': item.id,
+                'item_name': item.item_name,
+                'description': item.description or '',
+                'category': item.category,
+                'color': item.color or ''
+            } for item in found_items]
+
+            lost_item_dict = {
+                'id': lost_item.id,
+                'item_name': lost_item.item_name,
+                'description': lost_item.description or '',
+                'category': lost_item.category,
+                'color': lost_item.color or ''
+            }
+
+            matches = matcher.find_matches(lost_item_dict, found_items_dict, threshold=50.0)
+
+            # Create match records and batched notifications after final commit
+            for match_data in matches[:5]:
+                match = Match(
+                    lost_item_id=lost_item.id,
+                    found_item_id=match_data['found_item_id'],
+                    score=match_data['score'],
+                    status='suggested'
+                )
+                db.session.add(match)
+
+            db.session.commit()
+
+            # Notify user after successful transaction
+            for match_data in matches[:5]:
+                NotificationService.notify_match_found(
+                    current_user.id,
+                    lost_item.item_name,
+                    match_data['score']
+                )
+
+            flash('Lost item reported successfully! We will notify you if we find a match.', 'success')
+            return redirect(url_for('user.dashboard'))
+        except Exception:
+            db.session.rollback()
+            from flask import current_app
+            current_app.logger.exception('Error in report_lost route')
+            flash('Something went wrong while submitting your report. Please try again.', 'error')
             return render_template('user/report_lost.html')
-        
-        # Save image if provided
-        image_path = None
-        if image:
-            image_path = save_uploaded_file(image)
-        
-        # Create lost item
-        lost_item = LostItem(
-            user_id=current_user.id,
-            item_name=item_name,
-            description=description,
-            category=category,
-            color=color,
-            date_lost=date_lost_obj,
-            location_lost=location_lost,
-            image_path=image_path,
-            status='pending'
-        )
-        
-        db.session.add(lost_item)
-        db.session.commit()
-        
-        # Run AI matching
-        matcher = LostFoundMatcher()
-        from app.models.found_item import FoundItem
-        found_items = FoundItem.query.filter_by(status='available').all()
-        
-        # Convert to dict format for matcher
-        found_items_dict = [{
-            'id': item.id,
-            'item_name': item.item_name,
-            'description': item.description or '',
-            'category': item.category,
-            'color': item.color or ''
-        } for item in found_items]
-        
-        lost_item_dict = {
-            'id': lost_item.id,
-            'item_name': lost_item.item_name,
-            'description': lost_item.description or '',
-            'category': lost_item.category,
-            'color': lost_item.color or ''
-        }
-        
-        matches = matcher.find_matches(lost_item_dict, found_items_dict, threshold=50.0)
-        
-        # Create match records
-        for match_data in matches[:5]:  # Top 5 matches
-            match = Match(
-                lost_item_id=lost_item.id,
-                found_item_id=match_data['found_item_id'],
-                score=match_data['score'],
-                status='suggested'
-            )
-            db.session.add(match)
-            
-            # Notify user
-            NotificationService.notify_match_found(
-                current_user.id,
-                lost_item.item_name,
-                match_data['score']
-            )
-        
-        db.session.commit()
-        
-        flash('Lost item reported successfully! We will notify you if we find a match.', 'success')
-        return redirect(url_for('user.dashboard'))
     
     return render_template('user/report_lost.html')
 
