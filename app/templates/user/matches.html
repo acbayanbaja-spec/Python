@@ -45,6 +45,15 @@
             <div class="match-card-top">
                 <h5 class="mb-0">Potential Match #{{ loop.index }}</h5>
                 <span class="score-pill">{{ '%.1f'|format(match.score) }}% Match</span>
+                {% if match.score >= 85 %}
+                    <span class="badge bg-success ms-2">Very High</span>
+                {% elif match.score >= 65 %}
+                    <span class="badge bg-primary ms-2">High</span>
+                {% elif match.score >= 50 %}
+                    <span class="badge bg-warning text-dark ms-2">Medium</span>
+                {% else %}
+                    <span class="badge bg-secondary ms-2">Low</span>
+                {% endif %}
             </div>
 
             <div class="confidence-bar">

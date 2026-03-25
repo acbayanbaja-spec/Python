@@ -300,69 +300,69 @@
                 <ul class="nav flex-column">
                     {% if current_user.is_admin() %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint and 'admin' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                            <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <a class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}" href="{{ url_for('admin.users') }}">
                                 <i class="bi bi-people"></i> Users
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin.reports') }}">
+                            <a class="nav-link {% if request.endpoint == 'admin.reports' %}active{% endif %}" href="{{ url_for('admin.reports') }}">
                                 <i class="bi bi-graph-up"></i> Reports
                             </a>
                         </li>
                     {% elif current_user.is_staff() %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint and 'staff' in request.endpoint %}active{% endif %}" href="{{ url_for('staff.dashboard') }}">
+                            <a class="nav-link {% if request.endpoint == 'staff.dashboard' %}active{% endif %}" href="{{ url_for('staff.dashboard') }}">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('staff.log_found') }}">
+                            <a class="nav-link {% if request.endpoint == 'staff.log_found' %}active{% endif %}" href="{{ url_for('staff.log_found') }}">
                                 <i class="bi bi-plus-circle"></i> Log Found Item
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('staff.found_items') }}">
+                            <a class="nav-link {% if request.endpoint == 'staff.found_items' %}active{% endif %}" href="{{ url_for('staff.found_items') }}">
                                 <i class="bi bi-box-seam"></i> Found Items
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('staff.verify_claim') }}">
+                            <a class="nav-link {% if request.endpoint == 'staff.verify_claim' %}active{% endif %}" href="{{ url_for('staff.verify_claim') }}">
                                 <i class="bi bi-qr-code-scan"></i> Verify Claim
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('staff.matches') }}">
+                            <a class="nav-link {% if request.endpoint == 'staff.matches' %}active{% endif %}" href="{{ url_for('staff.matches') }}">
                                 <i class="bi bi-diagram-3"></i> Matches
                             </a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint and 'user' in request.endpoint %}active{% endif %}" href="{{ url_for('user.dashboard') }}">
+                            <a class="nav-link {% if request.endpoint == 'user.dashboard' %}active{% endif %}" href="{{ url_for('user.dashboard') }}">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user.report_lost') }}">
+                            <a class="nav-link {% if request.endpoint == 'user.report_lost' %}active{% endif %}" href="{{ url_for('user.report_lost') }}">
                                 <i class="bi bi-plus-circle"></i> Report Lost Item
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user.my_items') }}">
+                            <a class="nav-link {% if request.endpoint == 'user.my_items' %}active{% endif %}" href="{{ url_for('user.my_items') }}">
                                 <i class="bi bi-list-ul"></i> My Items
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user.matches') }}">
+                            <a class="nav-link {% if request.endpoint == 'user.matches' %}active{% endif %}" href="{{ url_for('user.matches') }}">
                                 <i class="bi bi-diagram-3"></i> Matches
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user.notifications') }}">
+                            <a class="nav-link {% if request.endpoint == 'user.notifications' %}active{% endif %}" href="{{ url_for('user.notifications') }}">
                                 <i class="bi bi-bell"></i> Notifications
                                 {% if unread_count and unread_count > 0 %}
                                 <span class="badge bg-danger">{{ unread_count }}</span>
