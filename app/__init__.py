@@ -141,3 +141,16 @@ def create_app(config_name=None):
         return {'unread_count': 0}
     
     return app
+
+# Provide a WSGI callable for environments that use `gunicorn app:app`.
+# This keeps the service bootable even if the start command differs.
+#
+# NOTE: `create_app()` already catches DB initialization failures so import won't crash.
+try:
+    _flask_env = os.environ.get('FLASK_ENV', 'development')
+    app = create_app(_flask_env)
+except Exception as _e:
+    # As a fallback, expose a dummy app created with default config.
+    # Gunicorn will still fail later if the environment is severely misconfigured,
+    # but this prevents "module 'app' has no attribute 'app'".
+    app = create_app('default')
