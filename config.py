@@ -37,13 +37,12 @@ class Config:
     else:
         # SQLite (development)
         SQLALCHEMY_DATABASE_URI = f'sqlite:///{basedir / "lost_found.db"}'
-    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     
     # Upload configuration
     UPLOAD_FOLDER = basedir / 'app' / 'static' / 'uploads'
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     
     # Session configuration
@@ -54,19 +53,19 @@ class Config:
     # Pagination
     ITEMS_PER_PAGE = 20
 
+
 class DevelopmentConfig(Config):
-    """Development configuration"""
     DEBUG = True
     SQLALCHEMY_ECHO = True
 
+
 class ProductionConfig(Config):
-    """Production configuration"""
     DEBUG = False
     SQLALCHEMY_ECHO = False
 
-# Configuration dictionary
+
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig
+    'default': ProductionConfig  # ✅ force production
 }
