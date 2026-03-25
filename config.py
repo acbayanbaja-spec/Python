@@ -4,6 +4,7 @@ Supports PostgreSQL (production) and SQLite (development)
 """
 import os
 from pathlib import Path
+import re
 
 basedir = Path(__file__).parent.absolute()
 
@@ -12,7 +13,20 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
     # Database configuration
-    DATABASE_URL = os.environ.get('DATABASE_URL')
+    # NOTE: Render env vars can sometimes accidentally include extra text/newlines.
+    # We defensively extract the first valid postgres URL so SQLAlchemy can parse it.
+    _raw_database_url = os.environ.get('DATABASE_URL') or os.environ.get('\ufeffDATABASE_URL')
+    DATABASE_URL = None
+    if _raw_database_url:
+        raw = str(_raw_database_url).strip()
+        # Remove wrapping quotes if present (single and double)
+        raw = raw.strip("\"' ")
+        # If the string contains labels or multiple tokens, extract the first URL.
+        m = re.search(r'(postgres(?:ql)?:\/\/[^\s]+)', raw, flags=re.IGNORECASE)
+        if m:
+            DATABASE_URL = m.group(1)
+        else:
+            DATABASE_URL = raw
     
     if DATABASE_URL:
         # PostgreSQL (production)
