@@ -14,6 +14,39 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 
+
+def ensure_default_accounts():
+    """Ensure core demo accounts always exist with known credentials."""
+    from app.models.user import User
+
+    # Keep default credentials aligned with seed_data.py and login page hints.
+    defaults = [
+        ("Admin User", "admin@seait.edu", "admin", "admin123"),
+        ("Staff Officer", "staff@seait.edu", "staff", "staff123"),
+        ("Student 1", "student1@seait.edu", "student", "student123"),
+    ]
+
+    changed = False
+    for name, email, role, password in defaults:
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(name=name, email=email, role=role)
+            user.set_password(password)
+            db.session.add(user)
+            changed = True
+            continue
+
+        # Keep role and password consistent for these default system accounts.
+        if user.role != role:
+            user.role = role
+            changed = True
+        if not user.check_password(password):
+            user.set_password(password)
+            changed = True
+
+    if changed:
+        db.session.commit()
+
 def create_app(config_name=None):
     """Application factory pattern"""
     app = Flask(__name__)
@@ -125,6 +158,7 @@ def create_app(config_name=None):
             # Test database connection first
             db.engine.connect()
             db.create_all()
+            ensure_default_accounts()
             app.logger.info("Database connection successful and tables created/verified")
         except Exception as e:
             # Log the error but don't crash the app

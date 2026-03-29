@@ -64,8 +64,8 @@ def login():
             return redirect(url_for('user.dashboard'))
     
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = (request.form.get('email') or '').strip().lower()
+        password = (request.form.get('password') or '').strip()
         remember = request.form.get('remember') == 'on'
         
         if not email or not password:
