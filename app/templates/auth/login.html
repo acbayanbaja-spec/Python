@@ -156,6 +156,136 @@
             border: 1px solid rgba(255,255,255,0.28);
         }
 
+        .makers-wrap {
+            position: relative;
+            z-index: 1;
+            margin-top: 10px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.22);
+            border-radius: 12px;
+            padding: 10px;
+            backdrop-filter: blur(2px);
+        }
+
+        .makers-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            opacity: 0.95;
+        }
+
+        .makers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .maker-card {
+            text-align: center;
+            border-radius: 12px;
+            padding: 6px 5px 7px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 2px solid rgba(255,255,255,0.3);
+            min-height: 112px;
+            transition: transform .2s ease;
+        }
+
+        .maker-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .maker-photo-wrap {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 6px;
+            border-radius: 50%;
+            padding: 2px;
+            overflow: hidden;
+        }
+
+        .maker-photo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .maker-name {
+            font-size: 10.2px;
+            line-height: 1.2;
+            font-weight: 700;
+            margin-bottom: 2px;
+            color: #fff;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.25);
+        }
+
+        .maker-role {
+            font-size: 9.8px;
+            font-weight: 600;
+            opacity: 0.95;
+        }
+
+        .maker-theme {
+            display: inline-block;
+            margin-top: 2px;
+            font-size: 8.8px;
+            font-weight: 700;
+            letter-spacing: .03em;
+            padding: 1px 5px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+
+        .theme-harry-potter {
+            background: linear-gradient(135deg, #7c3a1d, #b9803e);
+            border-color: #f4cd7a;
+        }
+
+        .theme-barney {
+            background: linear-gradient(135deg, #6d2ca3, #8f4bd6);
+            border-color: #c5a3ff;
+        }
+
+        .theme-barbie {
+            background: linear-gradient(135deg, #ff4f9a, #ff7eb8);
+            border-color: #ffd0e8;
+        }
+
+        .theme-horror {
+            background: linear-gradient(135deg, #121212, #5a0b0b);
+            border-color: #e65353;
+        }
+
+        .theme-powerpuff-violet {
+            background: linear-gradient(135deg, #5f44c4, #8a74ea);
+            border-color: #d8cbff;
+        }
+
+        .theme-wanted {
+            background: linear-gradient(135deg, #8a6746, #c49862);
+            border-color: #f6dfba;
+            position: relative;
+        }
+
+        .theme-wanted::after {
+            content: "WANTED";
+            position: absolute;
+            top: 3px;
+            right: 4px;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: #3a240f;
+            background: #f4d7a7;
+            border: 1px solid #d6b37d;
+            padding: 0 3px;
+            border-radius: 4px;
+        }
+
         .right-panel {
             background: linear-gradient(180deg, var(--soft-cream) 0%, #fff 34%);
             padding: 26px;
@@ -408,6 +538,10 @@
             .form-shell {
                 width: min(100%, 520px);
             }
+
+            .makers-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
         @media (max-width: 560px) {
@@ -480,6 +614,60 @@
                     <span>Accountability</span>
                     <span>Innovation</span>
                     <span>Teamwork</span>
+                </div>
+            </div>
+
+            <div class="makers-wrap">
+                <div class="makers-title">Makers of this system</div>
+                <div class="makers-grid">
+                    <div class="maker-card theme-harry-potter">
+                        <div class="maker-photo-wrap">
+                            <img src="{{ url_for('static', filename='images/team/member1.jpg') }}" alt="Developer" onerror="this.style.display='none';">
+                        </div>
+                        <div class="maker-name">Jangel RII Acbayan</div>
+                        <div class="maker-role">Developer</div>
+                        <span class="maker-theme">Harry Potter</span>
+                    </div>
+                    <div class="maker-card theme-barney">
+                        <div class="maker-photo-wrap">
+                            <img src="{{ url_for('static', filename='images/team/member2.jpg') }}" alt="Designer" onerror="this.style.display='none';">
+                        </div>
+                        <div class="maker-name">Johnrey Fanugon</div>
+                        <div class="maker-role">Designer</div>
+                        <span class="maker-theme">Barney</span>
+                    </div>
+                    <div class="maker-card theme-barbie">
+                        <div class="maker-photo-wrap">
+                            <img src="{{ url_for('static', filename='images/team/member3.jpg') }}" alt="Manager" onerror="this.style.display='none';">
+                        </div>
+                        <div class="maker-name">Dancris Amarao</div>
+                        <div class="maker-role">Manager</div>
+                        <span class="maker-theme">Barbie</span>
+                    </div>
+                    <div class="maker-card theme-horror">
+                        <div class="maker-photo-wrap">
+                            <img src="{{ url_for('static', filename='images/team/member4.jfif') }}" alt="Analyst" onerror="this.style.display='none';">
+                        </div>
+                        <div class="maker-name">Megan Young Sabal</div>
+                        <div class="maker-role">Analyst</div>
+                        <span class="maker-theme">Horror</span>
+                    </div>
+                    <div class="maker-card theme-powerpuff-violet">
+                        <div class="maker-photo-wrap">
+                            <img src="{{ url_for('static', filename='images/team/member5.jpg') }}" alt="Specialist" onerror="this.style.display='none';">
+                        </div>
+                        <div class="maker-name">Leamae Sarap Garcia</div>
+                        <div class="maker-role">Specialist</div>
+                        <span class="maker-theme">Powerpuff Violet</span>
+                    </div>
+                    <div class="maker-card theme-wanted">
+                        <div class="maker-photo-wrap">
+                            <img src="{{ url_for('static', filename='images/team/member6.jpg') }}" alt="Support" onerror="this.style.display='none';">
+                        </div>
+                        <div class="maker-name">Michael Salamat Gal</div>
+                        <div class="maker-role">Support</div>
+                        <span class="maker-theme">Wanted</span>
+                    </div>
                 </div>
             </div>
         </section>
