@@ -16,6 +16,102 @@ from datetime import datetime
 
 user_bp = Blueprint('user', __name__)
 
+
+def _process_report_lost_post():
+    """
+    Handle report-lost form. Returns redirect on success, None on validation error
+    (caller re-renders my-items with flash).
+    """
+    item_name = (request.form.get('item_name') or '').strip()
+    description = (request.form.get('description') or '').strip()
+    category = (request.form.get('category') or '').strip()
+    color = (request.form.get('color') or '').strip()
+    date_lost = (request.form.get('date_lost') or '').strip()
+    location_lost = (request.form.get('location_lost') or '').strip()
+    image = request.files.get('image')
+
+    if not item_name or not category or not date_lost:
+        flash('Item name, category, and date lost are required', 'error')
+        return None
+
+    try:
+        date_lost_obj = datetime.strptime(date_lost, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format', 'error')
+        return None
+
+    image_path = None
+    if image and image.filename:
+        image_path = save_uploaded_file(image)
+        if image_path is None:
+            flash('Invalid image format. Allowed: png, jpg, jpeg, gif, webp', 'error')
+            return None
+
+    lost_item = LostItem(
+        user_id=current_user.id,
+        item_name=item_name,
+        description=description or None,
+        category=category,
+        color=color or None,
+        date_lost=date_lost_obj,
+        location_lost=location_lost or None,
+        image_path=image_path,
+        status='pending'
+    )
+
+    db.session.add(lost_item)
+    db.session.flush()
+
+    matcher = LostFoundMatcher()
+    from app.models.found_item import FoundItem
+    found_items = FoundItem.query.filter_by(status='available').all()
+
+    found_items_dict = [{
+        'id': item.id,
+        'item_name': item.item_name,
+        'description': item.description or '',
+        'category': item.category,
+        'color': item.color or ''
+    } for item in found_items]
+
+    lost_item_dict = {
+        'id': lost_item.id,
+        'item_name': lost_item.item_name,
+        'description': lost_item.description or '',
+        'category': lost_item.category,
+        'color': lost_item.color or ''
+    }
+
+    matches = matcher.find_matches(lost_item_dict, found_items_dict, threshold=50.0)
+
+    for match_data in matches[:5]:
+        match = Match(
+            lost_item_id=lost_item.id,
+            found_item_id=match_data['found_item_id'],
+            score=match_data['score'],
+            status='suggested'
+        )
+        db.session.add(match)
+
+    db.session.commit()
+
+    for match_data in matches[:5]:
+        try:
+            NotificationService.notify_match_found(
+                current_user.id,
+                lost_item.item_name,
+                match_data['score']
+            )
+        except Exception:
+            from flask import current_app
+            current_app.logger.exception('Notification insert failed in report_lost')
+
+    flash('Lost item reported successfully! We will notify you if we find a match.', 'success')
+    status_filter = request.form.get('list_status') or request.args.get('status', 'all')
+    page = request.form.get('list_page', type=int) or 1
+    return redirect(url_for('user.my_items', page=page, status=status_filter) + '#inventory')
+
+
 @user_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -49,116 +145,37 @@ def dashboard():
 @user_bp.route('/report-lost', methods=['GET', 'POST'])
 @login_required
 def report_lost():
-    """Report a lost item"""
+    """Legacy URL — reporting is merged into My Items."""
     try:
         if request.method == 'POST':
-            item_name = (request.form.get('item_name') or '').strip()
-            description = (request.form.get('description') or '').strip()
-            category = (request.form.get('category') or '').strip()
-            color = (request.form.get('color') or '').strip()
-            date_lost = (request.form.get('date_lost') or '').strip()
-            location_lost = (request.form.get('location_lost') or '').strip()
-            image = request.files.get('image')
-
-            # Validation
-            if not item_name or not category or not date_lost:
-                flash('Item name, category, and date lost are required', 'error')
-                return render_template('user/report_lost.html')
-
-            try:
-                date_lost_obj = datetime.strptime(date_lost, '%Y-%m-%d').date()
-            except ValueError:
-                flash('Invalid date format', 'error')
-                return render_template('user/report_lost.html')
-
-            # Save image if provided
-            image_path = None
-            if image and image.filename:
-                image_path = save_uploaded_file(image)
-                if image_path is None:
-                    flash('Invalid image format. Allowed: png, jpg, jpeg, gif, webp', 'error')
-                    return render_template('user/report_lost.html')
-
-            # Create lost item
-            lost_item = LostItem(
-                user_id=current_user.id,
-                item_name=item_name,
-                description=description or None,
-                category=category,
-                color=color or None,
-                date_lost=date_lost_obj,
-                location_lost=location_lost or None,
-                image_path=image_path,
-                status='pending'
-            )
-
-            db.session.add(lost_item)
-            db.session.flush()
-
-            # Run AI matching
-            matcher = LostFoundMatcher()
-            from app.models.found_item import FoundItem
-            found_items = FoundItem.query.filter_by(status='available').all()
-
-            # Convert to dict format for matcher
-            found_items_dict = [{
-                'id': item.id,
-                'item_name': item.item_name,
-                'description': item.description or '',
-                'category': item.category,
-                'color': item.color or ''
-            } for item in found_items]
-
-            lost_item_dict = {
-                'id': lost_item.id,
-                'item_name': lost_item.item_name,
-                'description': lost_item.description or '',
-                'category': lost_item.category,
-                'color': lost_item.color or ''
-            }
-
-            matches = matcher.find_matches(lost_item_dict, found_items_dict, threshold=50.0)
-
-            # Create match records and batched notifications after final commit
-            for match_data in matches[:5]:
-                match = Match(
-                    lost_item_id=lost_item.id,
-                    found_item_id=match_data['found_item_id'],
-                    score=match_data['score'],
-                    status='suggested'
-                )
-                db.session.add(match)
-
-            db.session.commit()
-
-            # Notify user after successful transaction. Keep reporting flow alive even
-            # if notification insert fails for any reason.
-            for match_data in matches[:5]:
-                try:
-                    NotificationService.notify_match_found(
-                        current_user.id,
-                        lost_item.item_name,
-                        match_data['score']
-                    )
-                except Exception:
-                    from flask import current_app
-                    current_app.logger.exception('Notification insert failed in report_lost')
-
-            flash('Lost item reported successfully! We will notify you if we find a match.', 'success')
-            return redirect(url_for('user.dashboard'))
-        
-        return render_template('user/report_lost.html')
+            resp = _process_report_lost_post()
+            if resp:
+                return resp
+            return redirect(url_for('user.my_items') + '#report-lost-panel')
+        return redirect(url_for('user.my_items') + '#report-lost-panel')
     except Exception:
         db.session.rollback()
         from flask import current_app
         current_app.logger.exception('Error in report_lost route')
-        flash('Something went wrong while opening/submitting Report Lost Item. Please try again.', 'error')
-        return redirect(url_for('user.dashboard'))
+        flash('Something went wrong while submitting your report. Please try again.', 'error')
+        return redirect(url_for('user.my_items'))
 
-@user_bp.route('/my-items')
+
+@user_bp.route('/my-items', methods=['GET', 'POST'])
 @login_required
 def my_items():
-    """View all lost items"""
+    """View all lost items; report form lives on this page."""
+    try:
+        if request.method == 'POST':
+            resp = _process_report_lost_post()
+            if resp:
+                return resp
+    except Exception:
+        db.session.rollback()
+        from flask import current_app
+        current_app.logger.exception('Error in my_items POST')
+        flash('Something went wrong while submitting your report. Please try again.', 'error')
+
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', 'all')
     

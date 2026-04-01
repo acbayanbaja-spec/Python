@@ -303,6 +303,158 @@
                 transform: translateY(0);
             }
         }
+
+        /* Assistant (chat) widget */
+        .seait-chat-fab {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            color: #fff;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 28px rgba(255, 107, 53, 0.45);
+            z-index: 1080;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .seait-chat-fab:hover {
+            transform: scale(1.06);
+            box-shadow: 0 12px 32px rgba(255, 107, 53, 0.55);
+        }
+
+        .seait-chat-panel {
+            position: fixed;
+            right: 1.25rem;
+            bottom: 5.5rem;
+            width: min(400px, calc(100vw - 2rem));
+            max-height: min(560px, calc(100vh - 7rem));
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+            z-index: 1079;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            animation: chatPop .35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        .seait-chat-panel.open {
+            display: flex;
+        }
+
+        @keyframes chatPop {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .seait-chat-head {
+            padding: 0.85rem 1rem;
+            background: linear-gradient(135deg, #1a1a2e, #0f3460);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .seait-chat-head strong {
+            font-size: 0.95rem;
+        }
+
+        .seait-chat-head small {
+            opacity: 0.85;
+            font-size: 0.72rem;
+        }
+
+        .seait-chat-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem;
+            background: linear-gradient(180deg, #f8fafc 0%, #fff 40%);
+        }
+
+        .seait-chat-msg {
+            max-width: 92%;
+            padding: 0.55rem 0.75rem;
+            border-radius: 0.85rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.88rem;
+            line-height: 1.45;
+            animation: revealUp 0.35s ease both;
+        }
+
+        .seait-chat-msg.user {
+            margin-left: auto;
+            background: linear-gradient(135deg, #FF6B35, #f3904a);
+            color: #fff;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .seait-chat-msg.bot {
+            margin-right: auto;
+            background: #fff;
+            border: 1px solid #e9edf2;
+            border-bottom-left-radius: 0.25rem;
+            color: #1e293b;
+        }
+
+        .seait-chat-msg.bot strong {
+            color: #0f172a;
+        }
+
+        .seait-chat-foot {
+            padding: 0.65rem;
+            border-top: 1px solid #eef1f5;
+            background: #fff;
+        }
+
+        .seait-chat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .seait-chat-chips button {
+            font-size: 0.72rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .seait-chat-chips button:hover {
+            border-color: #FF6B35;
+            color: #c2410c;
+        }
+
+        .seait-chat-typing {
+            font-size: 0.75rem;
+            color: #64748b;
+            padding: 0 0.25rem 0.35rem;
+            min-height: 1.25rem;
+        }
+
+        @media (max-width: 576px) {
+            .seait-chat-panel {
+                right: 0.75rem;
+                left: 0.75rem;
+                width: auto;
+                bottom: 5rem;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -341,12 +493,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'staff.log_found' %}active{% endif %}" href="{{ url_for('staff.log_found') }}">
-                                <i class="bi bi-plus-circle"></i> Log Found Item
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'staff.found_items' %}active{% endif %}" href="{{ url_for('staff.found_items') }}">
+                            <a class="nav-link {% if request.endpoint in ('staff.found_items', 'staff.log_found') %}active{% endif %}" href="{{ url_for('staff.found_items') }}">
                                 <i class="bi bi-box-seam"></i> Found Items
                             </a>
                         </li>
@@ -367,12 +514,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'user.report_lost' %}active{% endif %}" href="{{ url_for('user.report_lost') }}">
-                                <i class="bi bi-plus-circle"></i> Report Lost Item
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'user.my_items' %}active{% endif %}" href="{{ url_for('user.my_items') }}">
+                            <a class="nav-link {% if request.endpoint in ('user.my_items', 'user.report_lost') %}active{% endif %}" href="{{ url_for('user.my_items') }}">
                                 <i class="bi bi-list-ul"></i> My Items
                             </a>
                         </li>
@@ -426,6 +568,38 @@
             </main>
         </div>
     </div>
+
+    <button type="button" class="seait-chat-fab" id="seaitChatFab" aria-label="Open assistant">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+    <div class="seait-chat-panel" id="seaitChatPanel" role="dialog" aria-label="SEAIT assistant">
+        <div class="seait-chat-head">
+            <div>
+                <strong>SEAIT Assistant</strong><br>
+                <small>Lost &amp; Found help</small>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light" id="seaitChatClose" aria-label="Close">&times;</button>
+        </div>
+        <div class="seait-chat-body" id="seaitChatBody">
+            <div class="seait-chat-msg bot">
+                Hi <strong>{{ current_user.name | e }}</strong> — ask how to report items, use matches, QR claims, or log found property. Answers use this app&rsquo;s help library; set <code>OPENAI_API_KEY</code> on the server for ChatGPT-style replies.
+            </div>
+        </div>
+        <div class="seait-chat-foot">
+            <div class="seait-chat-chips" id="seaitChatChips">
+                <button type="button" data-q="How do I report a lost item?">Report lost</button>
+                <button type="button" data-q="How do matches and QR claims work?">Matches &amp; QR</button>
+                <button type="button" data-q="Where do staff log found items?">Staff: log found</button>
+                <button type="button" data-q="What do pending, matched, and claimed mean?">Statuses</button>
+            </div>
+            <div class="seait-chat-typing" id="seaitChatTyping" style="display:none;">Assistant is thinking…</div>
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="seaitChatInput" placeholder="Ask anything about this system…" autocomplete="off">
+                <button class="btn btn-primary" type="button" id="seaitChatSend"><i class="bi bi-send-fill"></i></button>
+            </div>
+        </div>
+    </div>
+
     {% else %}
     </div>
     {% endif %}
@@ -453,6 +627,98 @@
             });
         });
     </script>
+    {% if current_user.is_authenticated %}
+    <script>
+    (function () {
+        const fab = document.getElementById('seaitChatFab');
+        const panel = document.getElementById('seaitChatPanel');
+        const closeBtn = document.getElementById('seaitChatClose');
+        const bodyEl = document.getElementById('seaitChatBody');
+        const input = document.getElementById('seaitChatInput');
+        const send = document.getElementById('seaitChatSend');
+        const typing = document.getElementById('seaitChatTyping');
+        const chips = document.getElementById('seaitChatChips');
+
+        function escapeHtml(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function formatReply(s) {
+            let t = escapeHtml(s);
+            t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            return t.replace(/\n/g, '<br>');
+        }
+
+        function appendBubble(cls, html) {
+            const div = document.createElement('div');
+            div.className = 'seait-chat-msg ' + cls;
+            div.innerHTML = html;
+            bodyEl.appendChild(div);
+            bodyEl.scrollTop = bodyEl.scrollHeight;
+        }
+
+        function sendMessage(text) {
+            const msg = (text || '').trim();
+            if (!msg) return;
+            appendBubble('user', escapeHtml(msg));
+            input.value = '';
+            typing.style.display = 'block';
+            fetch('{{ url_for("api.chat") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ message: msg }),
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    typing.style.display = 'none';
+                    if (data.reply) {
+                        appendBubble('bot', formatReply(data.reply));
+                    } else if (data.error) {
+                        appendBubble('bot', escapeHtml(data.error));
+                    }
+                })
+                .catch(function () {
+                    typing.style.display = 'none';
+                    appendBubble('bot', 'Could not reach the assistant. Check your connection and try again.');
+                });
+        }
+
+        if (fab && panel) {
+            fab.addEventListener('click', function () {
+                panel.classList.toggle('open');
+                if (panel.classList.contains('open')) {
+                    setTimeout(function () { input.focus(); }, 200);
+                }
+            });
+        }
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () {
+                panel.classList.remove('open');
+            });
+        }
+        if (send) {
+            send.addEventListener('click', function () { sendMessage(input.value); });
+        }
+        if (input) {
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage(input.value);
+                }
+            });
+        }
+        if (chips) {
+            chips.addEventListener('click', function (e) {
+                const btn = e.target.closest('button[data-q]');
+                if (!btn) return;
+                sendMessage(btn.getAttribute('data-q'));
+            });
+        }
+    })();
+    </script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

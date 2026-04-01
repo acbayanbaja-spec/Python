@@ -44,119 +44,130 @@ def dashboard():
                          claims=claims,
                          common_items=common_items)
 
+def _process_log_found_post():
+    """
+    Process log-found form submission. On success returns redirect response.
+    On validation error returns None and caller should re-render list + form.
+    """
+    item_name = request.form.get('item_name')
+    description = request.form.get('description')
+    category = request.form.get('category')
+    color = request.form.get('color')
+    date_found = request.form.get('date_found')
+    location_found = request.form.get('location_found')
+    storage_location = request.form.get('storage_location')
+    priority_flag = request.form.get('priority_flag') == 'on'
+    image = request.files.get('image')
+
+    if not item_name or not category or not date_found:
+        flash('Item name, category, and date found are required', 'error')
+        return None
+
+    try:
+        date_found_obj = datetime.strptime(date_found, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format', 'error')
+        return None
+
+    common_categories = ['ID', 'Wallet', 'Phone']
+    if category in common_categories:
+        priority_flag = True
+
+    image_path = None
+    if image and getattr(image, 'filename', None):
+        image_path = save_uploaded_file(image)
+
+    found_item = FoundItem(
+        staff_id=current_user.id,
+        item_name=item_name,
+        description=description,
+        category=category,
+        color=color,
+        date_found=date_found_obj,
+        location_found=location_found,
+        storage_location=storage_location,
+        priority_flag=priority_flag,
+        image_path=image_path,
+        status='available'
+    )
+
+    db.session.add(found_item)
+    db.session.commit()
+
+    matcher = LostFoundMatcher()
+    lost_items = LostItem.query.filter_by(status='pending').all()
+
+    found_item_dict = {
+        'id': found_item.id,
+        'item_name': found_item.item_name,
+        'description': found_item.description or '',
+        'category': found_item.category,
+        'color': found_item.color or ''
+    }
+
+    for lost_item in lost_items:
+        lost_item_dict = {
+            'id': lost_item.id,
+            'item_name': lost_item.item_name,
+            'description': lost_item.description or '',
+            'category': lost_item.category,
+            'color': lost_item.color or ''
+        }
+
+        score = matcher.calculate_match_score(lost_item_dict, found_item_dict)
+
+        if score >= 50.0:
+            existing_match = Match.query.filter_by(
+                lost_item_id=lost_item.id,
+                found_item_id=found_item.id
+            ).first()
+
+            if not existing_match:
+                match = Match(
+                    lost_item_id=lost_item.id,
+                    found_item_id=found_item.id,
+                    score=score,
+                    status='suggested'
+                )
+                db.session.add(match)
+
+                NotificationService.notify_match_found(
+                    lost_item.user_id,
+                    lost_item.item_name,
+                    score
+                )
+
+    db.session.commit()
+
+    flash('Found item logged successfully!', 'success')
+    status_filter = request.form.get('list_status') or request.args.get('status', 'all')
+    page = request.form.get('list_page', type=int) or 1
+    return redirect(url_for('staff.found_items', page=page, status=status_filter) + '#inventory')
+
+
 @staff_bp.route('/log-found', methods=['GET', 'POST'])
 @login_required
 @role_required('staff', 'admin')
 def log_found():
-    """Log a found item"""
+    """Legacy URL — merged into Found Items."""
     if request.method == 'POST':
-        item_name = request.form.get('item_name')
-        description = request.form.get('description')
-        category = request.form.get('category')
-        color = request.form.get('color')
-        date_found = request.form.get('date_found')
-        location_found = request.form.get('location_found')
-        storage_location = request.form.get('storage_location')
-        priority_flag = request.form.get('priority_flag') == 'on'
-        image = request.files.get('image')
-        
-        # Validation
-        if not item_name or not category or not date_found:
-            flash('Item name, category, and date found are required', 'error')
-            return render_template('staff/log_found.html')
-        
-        try:
-            date_found_obj = datetime.strptime(date_found, '%Y-%m-%d').date()
-        except ValueError:
-            flash('Invalid date format', 'error')
-            return render_template('staff/log_found.html')
-        
-        # Auto-flag common categories
-        common_categories = ['ID', 'Wallet', 'Phone']
-        if category in common_categories:
-            priority_flag = True
-        
-        # Save image if provided
-        image_path = None
-        if image:
-            image_path = save_uploaded_file(image)
-        
-        # Create found item
-        found_item = FoundItem(
-            staff_id=current_user.id,
-            item_name=item_name,
-            description=description,
-            category=category,
-            color=color,
-            date_found=date_found_obj,
-            location_found=location_found,
-            storage_location=storage_location,
-            priority_flag=priority_flag,
-            image_path=image_path,
-            status='available'
-        )
-        
-        db.session.add(found_item)
-        db.session.commit()
-        
-        # Run AI matching against pending lost items
-        matcher = LostFoundMatcher()
-        lost_items = LostItem.query.filter_by(status='pending').all()
-        
-        found_item_dict = {
-            'id': found_item.id,
-            'item_name': found_item.item_name,
-            'description': found_item.description or '',
-            'category': found_item.category,
-            'color': found_item.color or ''
-        }
-        
-        for lost_item in lost_items:
-            lost_item_dict = {
-                'id': lost_item.id,
-                'item_name': lost_item.item_name,
-                'description': lost_item.description or '',
-                'category': lost_item.category,
-                'color': lost_item.color or ''
-            }
-            
-            score = matcher.calculate_match_score(lost_item_dict, found_item_dict)
-            
-            if score >= 50.0:
-                # Check if match already exists
-                existing_match = Match.query.filter_by(
-                    lost_item_id=lost_item.id,
-                    found_item_id=found_item.id
-                ).first()
-                
-                if not existing_match:
-                    match = Match(
-                        lost_item_id=lost_item.id,
-                        found_item_id=found_item.id,
-                        score=score,
-                        status='suggested'
-                    )
-                    db.session.add(match)
-                    
-                    # Notify user
-                    NotificationService.notify_match_found(
-                        lost_item.user_id,
-                        lost_item.item_name,
-                        score
-                    )
-        
-        db.session.commit()
-        
-        flash('Found item logged successfully!', 'success')
-        return redirect(url_for('staff.dashboard'))
-    
-    return render_template('staff/log_found.html')
+        resp = _process_log_found_post()
+        if resp:
+            return resp
+        return redirect(url_for('staff.found_items') + '#log-found-panel')
+    return redirect(url_for('staff.found_items') + '#log-found-panel')
 
-@staff_bp.route('/found-items')
+
+@staff_bp.route('/found-items', methods=['GET', 'POST'])
 @login_required
 @role_required('staff', 'admin')
 def found_items():
-    """View all found items"""
+    """View all found items; log-new form lives on this page."""
+    if request.method == 'POST':
+        resp = _process_log_found_post()
+        if resp:
+            return resp
+
     page = request.args.get('page', 1, type=int)
     status_filter = request.args.get('status', 'all')
     

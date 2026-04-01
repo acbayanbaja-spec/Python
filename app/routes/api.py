@@ -8,6 +8,7 @@ from app.models.lost_item import LostItem
 from app.models.found_item import FoundItem
 from app.models.match import Match
 from app.utils.helpers import role_required
+from app.services.chat_assistant import reply as chat_reply
 
 api_bp = Blueprint('api', __name__)
 
@@ -61,3 +62,19 @@ def get_matches(lost_item_id):
         'status': match.status,
         'created_at': match.created_at.isoformat() if match.created_at else None
     } for match in matches])
+
+
+@api_bp.route('/chat', methods=['POST'])
+@login_required
+def chat():
+    """In-app assistant (knowledge base; optional OpenAI if OPENAI_API_KEY is set)."""
+    data = request.get_json(silent=True) or {}
+    message = (data.get('message') or '').strip()
+    if not message:
+        return jsonify({'error': 'message required'}), 400
+    role = getattr(current_user, 'role', None) or 'student'
+    out = chat_reply(message, role)
+    return jsonify({
+        'reply': out.get('reply', ''),
+        'source': out.get('source', 'knowledge'),
+    })
