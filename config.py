@@ -53,6 +53,16 @@ class Config:
     # Pagination
     ITEMS_PER_PAGE = 20
 
+    # Assistant UI (optional overrides via environment)
+    # Place your photo or logo in app/static/images/ (e.g. my-chatbot.png) and set:
+    # CHATBOT_AVATAR_STATIC=images/my-chatbot.png
+    CHATBOT_AVATAR_STATIC = os.environ.get(
+        'CHATBOT_AVATAR_STATIC', 'images/chatbot-mascot.svg'
+    ).strip()
+    CHATBOT_ASSISTANT_NAME = os.environ.get(
+        'CHATBOT_ASSISTANT_NAME', 'SEAIT Assistant'
+    ).strip() or 'SEAIT Assistant'
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

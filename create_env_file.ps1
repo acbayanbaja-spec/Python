@@ -11,6 +11,14 @@ SECRET_KEY=seait-lost-found-secret-key-2024-change-this
 
 # Session Configuration (set to True when using HTTPS)
 SESSION_COOKIE_SECURE=False
+
+# OpenAI (optional) — ChatGPT-style assistant replies
+# OPENAI_API_KEY=sk-your-key-here
+# OPENAI_CHAT_MODEL=gpt-4o-mini
+
+# Chatbot face/logo (optional) — file under app/static/images/
+# CHATBOT_AVATAR_STATIC=images/my-chatbot.png
+# CHATBOT_ASSISTANT_NAME=SEAIT Helper
 "@
 
 $envContent | Out-File -FilePath ".env" -Encoding utf8

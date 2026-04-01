@@ -23,3 +23,12 @@ Place team member photos in the `team/` directory:
 To add more team members:
 1. Add the image file to `team/` directory
 2. Update the team grid in `app/templates/auth/login.html`
+
+## Chatbot avatar (floating assistant)
+
+- **Default:** `chatbot-mascot.svg` (bundled cute mascot).
+- **Your face or logo:** Add e.g. `my-assistant.png` (square, **256×256** or larger works well) under this folder.
+- Set environment variable: `CHATBOT_AVATAR_STATIC=images/my-assistant.png`
+- Optional display name: `CHATBOT_ASSISTANT_NAME=Your Name`
+
+For **OpenAI**-powered replies, set `OPENAI_API_KEY` on the server (never commit it to git). See your platform’s environment variable settings (e.g. Render → Environment).

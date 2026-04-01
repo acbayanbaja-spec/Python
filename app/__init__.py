@@ -173,6 +173,26 @@ def create_app(config_name=None):
         if current_user.is_authenticated:
             return {'unread_count': NotificationService.get_unread_count(current_user.id)}
         return {'unread_count': 0}
+
+    @app.context_processor
+    def inject_chatbot_branding():
+        from flask import url_for
+
+        rel = app.config.get('CHATBOT_AVATAR_STATIC', 'images/chatbot-mascot.svg')
+        try:
+            avatar_url = url_for('static', filename=rel)
+            mascot_fallback = url_for('static', filename='images/chatbot-mascot.svg')
+        except Exception:
+            avatar_url = ''
+            mascot_fallback = ''
+        return {
+            'chatbot_avatar_url': avatar_url,
+            'chatbot_mascot_fallback_url': mascot_fallback,
+            'chatbot_assistant_name': app.config.get(
+                'CHATBOT_ASSISTANT_NAME', 'SEAIT Assistant'
+            ),
+            'openai_chat_enabled': bool(os.environ.get('OPENAI_API_KEY', '').strip()),
+        }
     
     return app
 

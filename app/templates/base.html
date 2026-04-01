@@ -304,43 +304,49 @@
             }
         }
 
-        /* Assistant (chat) widget */
+        /* Assistant (chat) widget — professional + mascot */
         .seait-chat-fab {
             position: fixed;
             right: 1.25rem;
             bottom: 1.25rem;
-            width: 56px;
-            height: 56px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
-            border: none;
-            background: linear-gradient(135deg, #FF6B35, #F7931E);
-            color: #fff;
-            font-size: 1.5rem;
-            box-shadow: 0 10px 28px rgba(255, 107, 53, 0.45);
+            border: 3px solid #fff;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(145deg, #1a1a2e, #0f3460);
+            box-shadow: 0 12px 32px rgba(26, 26, 46, 0.35), 0 0 0 1px rgba(255, 107, 53, 0.35);
             z-index: 1080;
-            transition: transform .25s ease, box-shadow .25s ease;
+            transition: transform .28s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow .28s ease;
         }
 
         .seait-chat-fab:hover {
-            transform: scale(1.06);
-            box-shadow: 0 12px 32px rgba(255, 107, 53, 0.55);
+            transform: scale(1.07);
+            box-shadow: 0 14px 36px rgba(255, 107, 53, 0.4), 0 0 0 1px rgba(255, 107, 53, 0.5);
+        }
+
+        .seait-chat-fab-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .seait-chat-panel {
             position: fixed;
             right: 1.25rem;
-            bottom: 5.5rem;
-            width: min(400px, calc(100vw - 2rem));
-            max-height: min(560px, calc(100vh - 7rem));
+            bottom: 5.75rem;
+            width: min(392px, calc(100vw - 2rem));
+            max-height: min(580px, calc(100vh - 7rem));
             background: #fff;
-            border-radius: 1rem;
-            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
+            border-radius: 1.15rem;
+            box-shadow: 0 22px 55px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
             z-index: 1079;
             display: none;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            animation: chatPop .35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            animation: chatPop .4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
 
         .seait-chat-panel.open {
@@ -350,7 +356,7 @@
         @keyframes chatPop {
             from {
                 opacity: 0;
-                transform: translateY(12px) scale(0.96);
+                transform: translateY(14px) scale(0.94);
             }
             to {
                 opacity: 1;
@@ -359,92 +365,151 @@
         }
 
         .seait-chat-head {
-            padding: 0.85rem 1rem;
-            background: linear-gradient(135deg, #1a1a2e, #0f3460);
+            padding: 0.9rem 1rem;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 45%, #0f3460 100%);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.5rem;
+            gap: 0.6rem;
+        }
+
+        .seait-chat-head-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.55);
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .seait-chat-head strong {
-            font-size: 0.95rem;
+            font-size: 0.98rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
         }
 
         .seait-chat-head small {
-            opacity: 0.85;
             font-size: 0.72rem;
+            opacity: 0.95;
+            line-height: 1.3;
+        }
+
+        .seait-chat-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.35);
+            animation: seaitDotPulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes seaitDotPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.75; transform: scale(0.92); }
         }
 
         .seait-chat-body {
             flex: 1;
             overflow-y: auto;
-            padding: 0.75rem;
-            background: linear-gradient(180deg, #f8fafc 0%, #fff 40%);
+            padding: 0.85rem;
+            background: linear-gradient(180deg, #f1f5f9 0%, #fafbfc 35%, #ffffff 100%);
+        }
+
+        .seait-chat-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.45rem;
+            margin-bottom: 0.55rem;
+            animation: revealUp 0.38s ease both;
+        }
+
+        .seait-chat-row-bot .seait-chat-avatar-tiny {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+        }
+
+        .seait-chat-row-user {
+            justify-content: flex-end;
         }
 
         .seait-chat-msg {
-            max-width: 92%;
-            padding: 0.55rem 0.75rem;
-            border-radius: 0.85rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.88rem;
-            line-height: 1.45;
-            animation: revealUp 0.35s ease both;
+            max-width: min(88%, 280px);
+            padding: 0.58rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
         }
 
         .seait-chat-msg.user {
-            margin-left: auto;
-            background: linear-gradient(135deg, #FF6B35, #f3904a);
+            background: linear-gradient(135deg, #FF6B35, #f08c45);
             color: #fff;
             border-bottom-right-radius: 0.25rem;
+            box-shadow: 0 4px 14px rgba(255, 107, 53, 0.28);
         }
 
         .seait-chat-msg.bot {
-            margin-right: auto;
             background: #fff;
-            border: 1px solid #e9edf2;
-            border-bottom-left-radius: 0.25rem;
+            border: 1px solid #e8ecf1;
+            border-bottom-left-radius: 0.3rem;
             color: #1e293b;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
         }
 
         .seait-chat-msg.bot strong {
             color: #0f172a;
         }
 
+        .seait-chat-welcome-hint {
+            font-size: 0.72rem;
+            color: #64748b;
+            margin-top: 0.35rem;
+            line-height: 1.45;
+        }
+
         .seait-chat-foot {
-            padding: 0.65rem;
-            border-top: 1px solid #eef1f5;
+            padding: 0.7rem 0.75rem 0.85rem;
+            border-top: 1px solid #edf0f4;
             background: #fff;
         }
 
         .seait-chat-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.35rem;
-            margin-bottom: 0.45rem;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
         }
 
         .seait-chat-chips button {
-            font-size: 0.72rem;
-            padding: 0.2rem 0.5rem;
+            font-size: 0.73rem;
+            padding: 0.28rem 0.65rem;
             border-radius: 999px;
             border: 1px solid #e2e8f0;
-            background: #f8fafc;
+            background: linear-gradient(180deg, #fff, #f8fafc);
             color: #475569;
+            font-weight: 500;
+            transition: border-color .2s, color .2s, transform .15s;
         }
 
         .seait-chat-chips button:hover {
             border-color: #FF6B35;
             color: #c2410c;
+            transform: translateY(-1px);
         }
 
         .seait-chat-typing {
             font-size: 0.75rem;
             color: #64748b;
-            padding: 0 0.25rem 0.35rem;
+            padding: 0 0.15rem 0.4rem;
             min-height: 1.25rem;
+            font-style: italic;
         }
 
         @media (max-width: 576px) {
@@ -452,8 +517,13 @@
                 right: 0.75rem;
                 left: 0.75rem;
                 width: auto;
-                bottom: 5rem;
+                bottom: 5.25rem;
             }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .seait-chat-panel, .seait-chat-row, .seait-chat-pulse-dot { animation: none !important; }
+            .seait-chat-fab:hover { transform: none; }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -569,20 +639,43 @@
         </div>
     </div>
 
-    <button type="button" class="seait-chat-fab" id="seaitChatFab" aria-label="Open assistant">
-        <i class="bi bi-chat-dots-fill"></i>
+    <button type="button" class="seait-chat-fab" id="seaitChatFab" aria-label="Open {{ chatbot_assistant_name | e }}">
+        <img src="{{ chatbot_avatar_url }}" alt="" class="seait-chat-fab-avatar" width="58" height="58" loading="lazy"
+             onerror="this.onerror=null;this.src='{{ chatbot_mascot_fallback_url }}';">
     </button>
-    <div class="seait-chat-panel" id="seaitChatPanel" role="dialog" aria-label="SEAIT assistant">
+    <div class="seait-chat-panel" id="seaitChatPanel" role="dialog" aria-label="{{ chatbot_assistant_name | e }}">
         <div class="seait-chat-head">
-            <div>
-                <strong>SEAIT Assistant</strong><br>
-                <small>Lost &amp; Found help</small>
+            <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                <img src="{{ chatbot_avatar_url }}" alt="" class="seait-chat-head-avatar" width="44" height="44" loading="lazy"
+                     onerror="this.onerror=null;this.src='{{ chatbot_mascot_fallback_url }}';">
+                <div class="min-w-0">
+                    <strong class="d-block text-truncate">{{ chatbot_assistant_name | e }}</strong>
+                    <small class="d-flex align-items-center gap-1 flex-wrap">
+                        <span class="seait-chat-pulse-dot" aria-hidden="true"></span>
+                        {% if openai_chat_enabled %}
+                        <span>Here to help · <span class="text-success">Smart replies on</span></span>
+                        {% else %}
+                        <span>Here to help · <span class="text-white-50">Guide mode</span></span>
+                        {% endif %}
+                    </small>
+                </div>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-light" id="seaitChatClose" aria-label="Close">&times;</button>
+            <button type="button" class="btn btn-sm btn-outline-light border-0 rounded-circle px-2" id="seaitChatClose" aria-label="Close" style="opacity:.9;">&times;</button>
         </div>
         <div class="seait-chat-body" id="seaitChatBody">
-            <div class="seait-chat-msg bot">
-                Hi <strong>{{ current_user.name | e }}</strong> — ask how to report items, use matches, QR claims, or log found property. Answers use this app&rsquo;s help library; set <code>OPENAI_API_KEY</code> on the server for ChatGPT-style replies.
+            <div class="seait-chat-row seait-chat-row-bot">
+                <img src="{{ chatbot_avatar_url }}" alt="" class="seait-chat-avatar-tiny" width="32" height="32" loading="lazy"
+                     onerror="this.onerror=null;this.src='{{ chatbot_mascot_fallback_url }}';">
+                <div>
+                    <div class="seait-chat-msg bot">
+                        Hi <strong>{{ current_user.name | e }}</strong> — I help with Lost &amp; Found: reporting items, <strong>My Items</strong>, matches, QR claims, and (for staff) logging found inventory. Ask in your own words, or use the shortcuts below.
+                    </div>
+                    {% if not openai_chat_enabled %}
+                    <p class="seait-chat-welcome-hint mb-0">Using the built-in help guide. For longer ChatGPT-style answers, your server admin can add an OpenAI API key in the environment.</p>
+                    {% else %}
+                    <p class="seait-chat-welcome-hint mb-0 text-success small">You&rsquo;re connected to smart answers — ask detailed questions anytime.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
         <div class="seait-chat-foot">
@@ -629,6 +722,10 @@
     </script>
     {% if current_user.is_authenticated %}
     <script>
+    window.SEAIT_CHAT_AVATAR = {{ chatbot_avatar_url | tojson }};
+    window.SEAIT_CHAT_AVATAR_FALLBACK = {{ chatbot_mascot_fallback_url | tojson }};
+    </script>
+    <script>
     (function () {
         const fab = document.getElementById('seaitChatFab');
         const panel = document.getElementById('seaitChatPanel');
@@ -651,18 +748,46 @@
             return t.replace(/\n/g, '<br>');
         }
 
-        function appendBubble(cls, html) {
-            const div = document.createElement('div');
-            div.className = 'seait-chat-msg ' + cls;
-            div.innerHTML = html;
-            bodyEl.appendChild(div);
+        function appendBubbleUser(html) {
+            const row = document.createElement('div');
+            row.className = 'seait-chat-row seait-chat-row-user';
+            const bubble = document.createElement('div');
+            bubble.className = 'seait-chat-msg user';
+            bubble.innerHTML = html;
+            row.appendChild(bubble);
+            bodyEl.appendChild(row);
+            bodyEl.scrollTop = bodyEl.scrollHeight;
+        }
+
+        function appendBubbleBot(html) {
+            const row = document.createElement('div');
+            row.className = 'seait-chat-row seait-chat-row-bot';
+            const img = document.createElement('img');
+            img.className = 'seait-chat-avatar-tiny';
+            img.width = 32;
+            img.height = 32;
+            img.alt = '';
+            img.src = window.SEAIT_CHAT_AVATAR || window.SEAIT_CHAT_AVATAR_FALLBACK || '';
+            img.onerror = function () {
+                if (img.src !== window.SEAIT_CHAT_AVATAR_FALLBACK) {
+                    img.src = window.SEAIT_CHAT_AVATAR_FALLBACK || '';
+                }
+            };
+            const wrap = document.createElement('div');
+            const bubble = document.createElement('div');
+            bubble.className = 'seait-chat-msg bot';
+            bubble.innerHTML = html;
+            wrap.appendChild(bubble);
+            row.appendChild(img);
+            row.appendChild(wrap);
+            bodyEl.appendChild(row);
             bodyEl.scrollTop = bodyEl.scrollHeight;
         }
 
         function sendMessage(text) {
             const msg = (text || '').trim();
             if (!msg) return;
-            appendBubble('user', escapeHtml(msg));
+            appendBubbleUser(escapeHtml(msg));
             input.value = '';
             typing.style.display = 'block';
             fetch('{{ url_for("api.chat") }}', {
@@ -674,14 +799,14 @@
                 .then(function (data) {
                     typing.style.display = 'none';
                     if (data.reply) {
-                        appendBubble('bot', formatReply(data.reply));
+                        appendBubbleBot(formatReply(data.reply));
                     } else if (data.error) {
-                        appendBubble('bot', escapeHtml(data.error));
+                        appendBubbleBot(escapeHtml(data.error));
                     }
                 })
                 .catch(function () {
                     typing.style.display = 'none';
-                    appendBubble('bot', 'Could not reach the assistant. Check your connection and try again.');
+                    appendBubbleBot('Could not reach the assistant. Check your connection and try again.');
                 });
         }
 
