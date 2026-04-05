@@ -1,0 +1,14 @@
+@startuml
+
+actor Customer
+actor Staff
+
+rectangle "Lost and Found Management System" {
+    Customer --> (Report Lost Item)
+    Customer --> (Claim Lost Item)
+    Staff --> (Receive Lost Item)
+    Staff --> (Store Lost Item)
+    Staff --> (Match Item with Customer)
+}
+
+@enduml
