@@ -1,96 +1,210 @@
-import time
-from flask import Flask, redirect, url_for
-from flask_login import LoginManager, current_user
-from flask_migrate import Migrate
+"""
+Flask application factory
+Initializes Flask app with extensions and blueprints
+"""
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-
+from flask_login import LoginManager
+from flask_migrate import Migrate
 from config import config
+import os
 
+# Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 
 
-def _init_db_with_retry(app, retries=3, delay=2):
-    for attempt in range(1, retries + 1):
-        try:
-            db.session.execute(text("SELECT 1"))
-            db.create_all()
-            app.logger.info("Database initialized successfully")
-            return
-        except SQLAlchemyError as exc:
-            app.logger.warning("Database initialization attempt %s failed: %s", attempt, exc)
-            db.session.rollback()
-            if attempt < retries:
-                time.sleep(delay)
-    app.logger.warning("App started without active database connection")
+def ensure_default_accounts():
+    """Ensure core demo accounts always exist with known credentials."""
+    from app.models.user import User
 
+    # Keep default credentials aligned with seed_data.py and login page hints.
+    defaults = [
+        ("Admin User", "admin@seait.edu", "admin", "admin123"),
+        ("Staff Officer", "staff@seait.edu", "staff", "staff123"),
+        ("Student 1", "student1@seait.edu", "student", "student123"),
+    ]
 
-def create_app(config_name="default"):
+    changed = False
+    for name, email, role, password in defaults:
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(name=name, email=email, role=role)
+            user.set_password(password)
+            db.session.add(user)
+            changed = True
+            continue
+
+        # Keep role and password consistent for these default system accounts.
+        if user.role != role:
+            user.role = role
+            changed = True
+        if not user.check_password(password):
+            user.set_password(password)
+            changed = True
+
+    if changed:
+        db.session.commit()
+
+def create_app(config_name=None):
+    """Application factory pattern"""
     app = Flask(__name__)
-    app.config.from_object(config.get(config_name, config["default"]))
-
+    
+    # Load configuration
+    config_name = config_name or os.environ.get('FLASK_ENV', 'default')
+    app.config.from_object(config[config_name])
+    
+    # Disable template caching in production to see updates immediately
+    # (Remove this after confirming the new design works)
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.jinja_env.auto_reload = True
+    
+    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
-    login_manager.login_view = "auth.login"
-    login_manager.login_message_category = "warning"
-
-    from app.models.user import User
-
+    
+    # Configure login manager
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
+    
     @login_manager.user_loader
     def load_user(user_id):
+        from app.models.user import User
         return User.query.get(int(user_id))
-
-    app.config["UPLOAD_FOLDER"].mkdir(parents=True, exist_ok=True)
-
+    
+    # Create upload directory if it doesn't exist
+    upload_folder = app.config['UPLOAD_FOLDER']
+    upload_folder.mkdir(parents=True, exist_ok=True)
+    
+    # Register blueprints
     from app.routes.auth import auth_bp
-    from app.routes.student import student_bp
-    from app.routes.registrar import registrar_bp
-    from app.routes.accounting import accounting_bp
+    from app.routes.user import user_bp
+    from app.routes.staff import staff_bp
     from app.routes.admin import admin_bp
-    from app.routes.sao import sao_bp
-    from app.routes.department import department_bp
-
-    app.register_blueprint(auth_bp, url_prefix="/auth")
-    app.register_blueprint(student_bp, url_prefix="/student")
-    app.register_blueprint(registrar_bp, url_prefix="/registrar")
-    app.register_blueprint(accounting_bp, url_prefix="/accounting")
-    app.register_blueprint(admin_bp, url_prefix="/admin")
-    app.register_blueprint(sao_bp, url_prefix="/sao")
-    app.register_blueprint(department_bp, url_prefix="/department")
-
-    @app.route("/")
-    def index():
-        if not current_user.is_authenticated:
-            return redirect(url_for("auth.login"))
-        role_to_endpoint = {
-            "student": "student.dashboard",
-            "registrar": "registrar.dashboard",
-            "accounting": "accounting.dashboard",
-            "admin": "admin.dashboard",
-            "sao": "sao.dashboard",
-            "department": "department.dashboard",
-        }
-        return redirect(url_for(role_to_endpoint.get(current_user.role, "auth.login")))
-
-    @app.route("/health")
+    from app.routes.api import api_bp
+    
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(user_bp, url_prefix='/user')
+    app.register_blueprint(staff_bp, url_prefix='/staff')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(api_bp, url_prefix='/api')
+    
+    # Health check endpoint (for Render deployment monitoring)
+    @app.route('/health')
     def health():
-        return {"status": "ok", "service": "SEAIT Online Enrollment System"}, 200
+        """Health check endpoint that doesn't require database"""
+        return {'status': 'ok', 'service': 'SEAIT Lost and Found System'}, 200
+    
+    # Root route - redirect to login
+    @app.route('/')
+    def index():
+        from flask import redirect, url_for
+        from flask_login import current_user
+        try:
+            if current_user.is_authenticated:
+                # Redirect based on role
+                if current_user.is_admin():
+                    return redirect(url_for('admin.dashboard'))
+                elif current_user.is_staff():
+                    return redirect(url_for('staff.dashboard'))
+                else:
+                    return redirect(url_for('user.dashboard'))
+        except Exception as e:
+            # If there's an error, just redirect to login
+            app.logger.error(f"Error in index route: {e}")
+        return redirect(url_for('auth.login'))
+
+    @app.errorhandler(413)
+    def request_entity_too_large(error):
+        from flask import request, redirect, url_for, flash
+        from flask_login import current_user
+        app.logger.warning(f"413 Payload too large at {request.path}: {error}")
+        flash('Uploaded file is too large. Maximum allowed size is 16MB.', 'error')
+        # Redirect back if possible, fallback to dashboard/login
+        ref = request.referrer
+        if ref:
+            return redirect(ref)
+        return redirect(url_for('user.dashboard') if current_user.is_authenticated else url_for('auth.login'))
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        from flask import request, redirect, url_for, flash
+        from flask_login import current_user
+        # Ensure failed transactions do not poison the session for next requests
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        app.logger.exception(f"500 Internal Server Error at {request.path}: {error}")
+        flash('Unexpected server issue occurred. Please try again.', 'error')
+        if current_user.is_authenticated:
+            if current_user.is_admin():
+                return redirect(url_for('admin.dashboard'))
+            if current_user.is_staff():
+                return redirect(url_for('staff.dashboard'))
+            return redirect(url_for('user.dashboard'))
+        return redirect(url_for('auth.login'))
+    
+    # Import models to register them with SQLAlchemy
+    from app import models
+    
+    # Create database tables (if they don't exist)
+    # This is done in a try-except to prevent startup failures
+    with app.app_context():
+        try:
+            # Test database connection first
+            db.engine.connect()
+            db.create_all()
+            ensure_default_accounts()
+            app.logger.info("Database connection successful and tables created/verified")
+        except Exception as e:
+            # Log the error but don't crash the app
+            app.logger.warning(f"Database initialization warning: {e}")
+            app.logger.info("App will continue to run, but database operations may fail")
+    
+    # Context processor for unread notifications
+    @app.context_processor
+    def inject_unread_count():
+        from flask_login import current_user
+        from app.services.notification_service import NotificationService
+        if current_user.is_authenticated:
+            return {'unread_count': NotificationService.get_unread_count(current_user.id)}
+        return {'unread_count': 0}
 
     @app.context_processor
-    def inject_notification_count():
-        if not current_user.is_authenticated:
-            return {"unread_count": 0}
-        from app.services.notification_service import NotificationService
+    def inject_chatbot_branding():
+        from flask import url_for
 
-        return {"unread_count": NotificationService.get_unread_count(current_user.id)}
-
-    with app.app_context():
-        from app import models  # noqa: F401
-
-        _init_db_with_retry(app)
-
+        rel = app.config.get('CHATBOT_AVATAR_STATIC', 'images/chatbot-mascot.svg')
+        try:
+            avatar_url = url_for('static', filename=rel)
+            mascot_fallback = url_for('static', filename='images/chatbot-mascot.svg')
+        except Exception:
+            avatar_url = ''
+            mascot_fallback = ''
+        return {
+            'chatbot_avatar_url': avatar_url,
+            'chatbot_mascot_fallback_url': mascot_fallback,
+            'chatbot_assistant_name': app.config.get(
+                'CHATBOT_ASSISTANT_NAME', 'SEAIT Assistant'
+            ),
+            'openai_chat_enabled': bool(os.environ.get('OPENAI_API_KEY', '').strip()),
+        }
+    
     return app
+
+# Provide a WSGI callable for environments that use `gunicorn app:app`.
+# This keeps the service bootable even if the start command differs.
+#
+# NOTE: `create_app()` already catches DB initialization failures so import won't crash.
+try:
+    _flask_env = os.environ.get('FLASK_ENV', 'development')
+    app = create_app(_flask_env)
+except Exception as _e:
+    # As a fallback, expose a dummy app created with default config.
+    # Gunicorn will still fail later if the environment is severely misconfigured,
+    # but this prevents "module 'app' has no attribute 'app'".
+    app = create_app('default')

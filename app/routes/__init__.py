@@ -1,1 +1,3 @@
-"""Route package for online enrollment system."""
+"""
+Route blueprints
+"""

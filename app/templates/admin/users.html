@@ -1,18 +1,93 @@
 {% extends "base.html" %}
+
+{% block title %}User Management - Lost and Found System{% endblock %}
+
 {% block content %}
-<h3>Manage Users</h3>
-<form method="POST" class="card p-3 mb-3">
-    <div class="row g-2">
-        <div class="col-md-3"><input class="form-control" name="full_name" placeholder="Full name" required></div>
-        <div class="col-md-3"><input class="form-control" type="email" name="email" placeholder="Email" required></div>
-        <div class="col-md-2"><select class="form-select" name="role"><option>student</option><option>registrar</option><option>accounting</option><option>admin</option><option>sao</option><option>department</option></select></div>
-        <div class="col-md-2"><input class="form-control" name="student_number" placeholder="Student #"></div>
-        <div class="col-md-1"><input class="form-control" type="number" name="year_level" value="1"></div>
-        <div class="col-md-1"><button class="btn btn-primary w-100">Add</button></div>
+<h2 class="mb-4">User Management</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <a href="{{ url_for('admin.create_user') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New User
+        </a>
     </div>
-</form>
-<table class="table table-sm table-bordered">
-    <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
-    <tbody>{% for u in users %}<tr><td>{{ u.full_name }}</td><td>{{ u.email }}</td><td>{{ u.role }}</td></tr>{% endfor %}</tbody>
-</table>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="role" class="form-label">Filter by Role</label>
+                <select class="form-select" id="role" name="role" onchange="this.form.submit()">
+                    <option value="all" {% if role_filter == 'all' %}selected{% endif %}>All</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff</option>
+                    <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Student</option>
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-body">
+        {% if users.items %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users.items %}
+                    <tr>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ user.role.title() }}</span>
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if users.pages > 1 %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if users.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.prev_num }}&role={{ role_filter }}">Previous</a>
+                </li>
+                {% endif %}
+                {% for page_num in users.iter_pages() %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == users.page %}active{% endif %}">
+                            <a class="page-link" href="?page={{ page_num }}&role={{ role_filter }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                {% if users.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.next_num }}&role={{ role_filter }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <p class="text-muted">No users found.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}
