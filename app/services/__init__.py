@@ -1,8 +1,4 @@
-"""
-Service layer for business logic
-"""
-from app.services.lost_found_matcher import LostFoundMatcher
 from app.services.notification_service import NotificationService
-from app.services.qr_service import QRService
+from app.services.ai_recommender import recommend_subjects, detect_irregular_status
 
-__all__ = ['LostFoundMatcher', 'NotificationService', 'QRService']
+__all__ = ["NotificationService", "recommend_subjects", "detect_irregular_status"]

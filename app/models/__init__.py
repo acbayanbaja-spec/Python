@@ -1,11 +1,14 @@
-"""
-Database models for the Lost and Found System
-"""
 from app.models.user import User
-from app.models.lost_item import LostItem
-from app.models.found_item import FoundItem
-from app.models.match import Match
-from app.models.claim import Claim
+from app.models.enrollment import Enrollment
+from app.models.subject import Subject, StudentSubjectCompletion
+from app.models.payment import Payment
 from app.models.notification import Notification
 
-__all__ = ['User', 'LostItem', 'FoundItem', 'Match', 'Claim', 'Notification']
+__all__ = [
+    "User",
+    "Enrollment",
+    "Subject",
+    "StudentSubjectCompletion",
+    "Payment",
+    "Notification",
+]

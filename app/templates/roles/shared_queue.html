@@ -1,0 +1,22 @@
+<table class="table table-striped">
+    <thead><tr><th>ID</th><th>Student</th><th>Program</th><th>Semester</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for row in queue %}
+    <tr>
+        <td>{{ row.id }}</td><td>{{ row.student.full_name }}</td><td>{{ row.program }}</td><td>{{ row.semester }}</td>
+        <td>
+            <form method="POST" action="
+            {% if request.endpoint == 'registrar.dashboard' %}{{ url_for('registrar.review', enrollment_id=row.id) }}
+            {% elif request.endpoint == 'accounting.dashboard' %}{{ url_for('accounting.verify', enrollment_id=row.id) }}
+            {% elif request.endpoint == 'department.dashboard' %}{{ url_for('department.validate', enrollment_id=row.id) }}
+            {% else %}{{ url_for('sao.validate_id', enrollment_id=row.id) }}{% endif %}">
+                <button class="btn btn-sm btn-success" name="action" value="approve">Approve</button>
+                <button class="btn btn-sm btn-danger" name="action" value="reject">Reject</button>
+            </form>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No pending enrollments.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
