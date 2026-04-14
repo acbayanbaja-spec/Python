@@ -77,6 +77,38 @@
         font-size: 3rem;
         opacity: 0.3;
     }
+
+    .analytics-card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 24px rgba(26, 26, 46, 0.08);
+        overflow: hidden;
+    }
+
+    .analytics-card-header {
+        background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+        color: #fff;
+        border: none;
+        padding: 1rem 1.25rem;
+    }
+
+    .analytics-card-header h5 {
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+        margin: 0;
+    }
+
+    .analytics-card-header small {
+        color: rgba(255, 255, 255, 0.72);
+        font-weight: 400;
+    }
+
+    .analytics-chart-wrap {
+        position: relative;
+        height: 300px;
+        padding: 0.25rem 0;
+    }
 </style>
 {% endblock %}
 
@@ -139,6 +171,40 @@
             <i class="bi bi-person-check"></i>
             <h5>Staff</h5>
             <h3 class="count-up" data-count="{{ total_staff }}">{{ total_staff }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Data analytics -->
+<div class="row mb-4 g-4">
+    <div class="col-lg-7">
+        <div class="card analytics-card reveal-up">
+            <div class="card-header analytics-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Activity trend</h5>
+                    <small class="d-block mt-1">Lost and found reports logged per day (last 14 days, UTC)</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="analytics-chart-wrap">
+                    <canvas id="adminTrendChart" aria-label="Line chart of daily lost and found activity"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card analytics-card reveal-up">
+            <div class="card-header analytics-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-fill me-2"></i>Volume by category</h5>
+                    <small class="d-block mt-1">Top categories by combined lost and found records</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="analytics-chart-wrap">
+                    <canvas id="adminCategoryChart" aria-label="Bar chart of item counts by category"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -249,4 +315,133 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    var font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    var grid = 'rgba(26, 26, 46, 0.06)';
+    var tick = '#5c5c6f';
+
+    var trendLabels = {{ trend_labels|tojson }};
+    var trendLost = {{ trend_lost|tojson }};
+    var trendFound = {{ trend_found|tojson }};
+    var catLabels = {{ category_chart_labels|tojson }};
+    var catValues = {{ category_chart_values|tojson }};
+
+    var trendCtx = document.getElementById('adminTrendChart');
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [
+                    {
+                        label: 'Lost reports',
+                        data: trendLost,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.12)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                    },
+                    {
+                        label: 'Found intakes',
+                        data: trendFound,
+                        borderColor: '#0aa2c0',
+                        backgroundColor: 'rgba(10, 162, 192, 0.1)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: font, size: 12 }, color: tick, usePointStyle: true, padding: 16 },
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 46, 0.92)',
+                        titleFont: { family: font, size: 13 },
+                        bodyFont: { family: font, size: 13 },
+                        padding: 12,
+                        cornerRadius: 8,
+                    },
+                },
+                scales: {
+                    x: {
+                        grid: { color: grid },
+                        ticks: { font: { family: font, size: 11 }, color: tick, maxRotation: 45 },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: grid },
+                        ticks: { font: { family: font, size: 11 }, color: tick, precision: 0 },
+                    },
+                },
+            },
+        });
+    }
+
+    var barCtx = document.getElementById('adminCategoryChart');
+    if (barCtx) {
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: catLabels,
+                datasets: [
+                    {
+                        label: 'Total records',
+                        data: catValues,
+                        backgroundColor: catLabels.map(function (_, i) {
+                            var a = ['rgba(102, 126, 234, 0.85)', 'rgba(118, 75, 162, 0.85)', 'rgba(10, 162, 192, 0.85)', 'rgba(255, 107, 53, 0.85)', 'rgba(25, 135, 84, 0.85)'];
+                            return a[i % a.length];
+                        }),
+                        borderColor: 'rgba(255, 255, 255, 0.6)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(26, 26, 46, 0.92)',
+                        titleFont: { family: font, size: 13 },
+                        bodyFont: { family: font, size: 13 },
+                        padding: 12,
+                        cornerRadius: 8,
+                    },
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: font, size: 11 }, color: tick, maxRotation: 45 },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: grid },
+                        ticks: { font: { family: font, size: 11 }, color: tick, precision: 0 },
+                    },
+                },
+            },
+        });
+    }
+})();
+</script>
 {% endblock %}

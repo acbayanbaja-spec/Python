@@ -11,6 +11,7 @@ from app.models.match import Match
 from app.models.claim import Claim
 from app.utils.helpers import role_required
 from datetime import datetime, timedelta
+from sqlalchemy import func
 import csv
 import io
 
@@ -46,7 +47,45 @@ def dashboard():
     total_users = User.query.count()
     total_students = User.query.filter_by(role='student').count()
     total_staff = User.query.filter_by(role='staff').count()
-    
+
+    # Dashboard charts: 14-day activity (UTC, by created_at)
+    now = datetime.utcnow()
+    trend_labels = []
+    trend_lost = []
+    trend_found = []
+    for i in range(13, -1, -1):
+        day = (now - timedelta(days=i)).date()
+        day_start = datetime.combine(day, datetime.min.time())
+        day_end = day_start + timedelta(days=1)
+        trend_labels.append(day.strftime('%b %d'))
+        trend_lost.append(
+            LostItem.query.filter(
+                LostItem.created_at >= day_start,
+                LostItem.created_at < day_end,
+            ).count()
+        )
+        trend_found.append(
+            FoundItem.query.filter(
+                FoundItem.created_at >= day_start,
+                FoundItem.created_at < day_end,
+            ).count()
+        )
+
+    lost_by_cat = dict(
+        db.session.query(LostItem.category, func.count(LostItem.id)).group_by(LostItem.category).all()
+    )
+    found_by_cat = dict(
+        db.session.query(FoundItem.category, func.count(FoundItem.id)).group_by(FoundItem.category).all()
+    )
+    all_categories = set(lost_by_cat.keys()) | set(found_by_cat.keys())
+    category_pairs = sorted(
+        ((c, lost_by_cat.get(c, 0) + found_by_cat.get(c, 0)) for c in all_categories),
+        key=lambda x: x[1],
+        reverse=True,
+    )[:10]
+    category_chart_labels = [p[0] for p in category_pairs]
+    category_chart_values = [p[1] for p in category_pairs]
+
     return render_template('admin/dashboard.html',
                          total_lost=total_lost,
                          total_found=total_found,
@@ -59,7 +98,12 @@ def dashboard():
                          recent_matches=recent_matches,
                          total_users=total_users,
                          total_students=total_students,
-                         total_staff=total_staff)
+                         total_staff=total_staff,
+                         trend_labels=trend_labels,
+                         trend_lost=trend_lost,
+                         trend_found=trend_found,
+                         category_chart_labels=category_chart_labels,
+                         category_chart_values=category_chart_values)
 
 @admin_bp.route('/users')
 @login_required
@@ -147,7 +191,6 @@ def reports():
         })
     
     # Category statistics
-    from sqlalchemy import func
     lost_categories = db.session.query(
         LostItem.category,
         func.count(LostItem.id).label('count')
