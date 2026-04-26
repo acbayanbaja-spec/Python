@@ -252,6 +252,10 @@
                                 </td>
                                 <td>
                                     <a href="{{ url_for('user.my_items') }}" class="btn btn-sm btn-outline-primary">View</a>
+                                    <a href="{{ url_for('user.edit_lost_item', item_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <form method="POST" action="{{ url_for('user.delete_lost_item', item_id=item.id) }}" style="display:inline;" onsubmit="return confirm('Delete this lost item? This also removes related records from staff modules.');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}

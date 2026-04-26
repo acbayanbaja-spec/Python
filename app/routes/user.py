@@ -223,6 +223,63 @@ def my_items():
     
     return render_template('user/my_items.html', lost_items=lost_items, status_filter=status_filter)
 
+
+@user_bp.route('/edit-lost-item/<int:item_id>', methods=['GET', 'POST'])
+@login_required
+def edit_lost_item(item_id):
+    """Edit an existing lost item reported by the student."""
+    item = LostItem.query.filter_by(id=item_id, user_id=current_user.id).first_or_404()
+
+    if request.method == 'POST':
+        item_name = (request.form.get('item_name') or '').strip()
+        category = (request.form.get('category') or '').strip()
+        color = (request.form.get('color') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        location_lost = (request.form.get('location_lost') or '').strip()
+        date_lost = (request.form.get('date_lost') or '').strip()
+        image = request.files.get('image')
+
+        if not item_name or not category or not date_lost:
+            flash('Item name, category, and date lost are required.', 'error')
+            return render_template('user/edit_lost_item.html', item=item)
+
+        try:
+            item.date_lost = datetime.strptime(date_lost, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid date format.', 'error')
+            return render_template('user/edit_lost_item.html', item=item)
+
+        item.item_name = item_name
+        item.category = category
+        item.color = color or None
+        item.description = description or None
+        item.location_lost = location_lost or None
+
+        if image and image.filename:
+            image_path = save_uploaded_file(image)
+            if image_path is None:
+                flash('Invalid image format. Allowed: png, jpg, jpeg, gif, webp', 'error')
+                return render_template('user/edit_lost_item.html', item=item)
+            item.image_path = image_path
+
+        db.session.commit()
+        flash('Lost item updated successfully.', 'success')
+        return redirect(url_for('user.dashboard'))
+
+    return render_template('user/edit_lost_item.html', item=item)
+
+
+@user_bp.route('/delete-lost-item/<int:item_id>', methods=['POST'])
+@login_required
+def delete_lost_item(item_id):
+    """Delete a lost item and related records for the owner."""
+    item = LostItem.query.filter_by(id=item_id, user_id=current_user.id).first_or_404()
+    item_name = item.item_name
+    db.session.delete(item)
+    db.session.commit()
+    flash(f"Lost item '{item_name}' deleted.", 'success')
+    return redirect(url_for('user.dashboard'))
+
 @user_bp.route('/matches')
 @login_required
 def matches():

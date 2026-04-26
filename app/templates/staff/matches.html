@@ -68,12 +68,59 @@
                             {% else %}
                             <span class="text-muted small">No action</span>
                             {% endif %}
+                            <form method="POST" action="{{ url_for('staff.delete_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-trash3"></i> Recycle Bin (Matches)</h5>
+        <span class="badge bg-secondary">{{ deleted_matches|length }}</span>
+    </div>
+    <div class="card-body">
+        {% if deleted_matches %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Lost Item</th>
+                        <th>Found Item</th>
+                        <th>Score</th>
+                        <th>Deleted Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for match in deleted_matches %}
+                    <tr>
+                        <td>{{ match.lost_item.item_name }}</td>
+                        <td>{{ match.found_item.item_name }}</td>
+                        <td><span class="badge bg-info">{{ match.score }}%</span></td>
+                        <td><span class="status-badge status-deleted">Deleted</span></td>
+                        <td>
+                            <form method="POST" action="{{ url_for('staff.restore_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('staff.purge_match', match_id=match.id) }}" style="display:inline;" onsubmit="return confirm('Permanently delete this match?');">
+                                <button type="submit" class="btn btn-sm btn-danger">Delete Permanently</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Recycle bin is empty.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
