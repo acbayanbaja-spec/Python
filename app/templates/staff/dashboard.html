@@ -341,7 +341,10 @@
 
 <aside class="lost-feed">
     <div class="lost-feed-header">
-        <h6 class="mb-1"><i class="bi bi-bell-fill"></i> New Student Lost Reports</h6>
+        <div class="d-flex justify-content-between align-items-center gap-2">
+            <h6 class="mb-1"><i class="bi bi-bell-fill"></i> New Student Lost Reports</h6>
+            <a href="{{ url_for('staff.lost_reports') }}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
         <p class="text-muted small mb-0">Auto-updated feed for staff action</p>
     </div>
     <div class="lost-feed-body">
@@ -349,17 +352,16 @@
             {% for item in recent_lost_reports %}
             <div class="lost-report-card">
                 <div class="d-flex gap-2 align-items-start">
-                    {% if item.image_path %}
-                        <img src="{{ url_for('static', filename=item.image_path) }}" alt="Lost item image" class="thumb-md" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-                        <span class="thumb-placeholder hidden">No image</span>
-                    {% else %}
-                        <span class="thumb-placeholder">No image</span>
-                    {% endif %}
+                    <img src="{{ url_for('static', filename=(item.image_path or 'images/lost-item-placeholder.svg')) }}"
+                         alt="Lost item image"
+                         class="thumb-md"
+                         onerror="this.src='{{ url_for('static', filename='images/lost-item-placeholder.svg') }}';">
                     <div class="flex-grow-1">
                         <div class="fw-semibold small">{{ item.item_name }}</div>
                         <div class="small text-muted">{{ item.category }} • {{ item.user.name }}</div>
                         <div class="small text-muted">{{ item.location_lost or 'Location not specified' }}</div>
                         <div class="small text-muted">{{ item.created_at.strftime('%b %d, %Y %I:%M %p') if item.created_at else '' }}</div>
+                        <a href="{{ url_for('staff.lost_reports') }}" class="btn btn-sm btn-outline-primary mt-2">View</a>
                     </div>
                 </div>
             </div>
