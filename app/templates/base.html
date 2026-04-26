@@ -638,7 +638,7 @@
             </main>
         </div>
     </div>
-
+    {% if current_user.is_student() %}
     <button type="button" class="seait-chat-fab" id="seaitChatFab" aria-label="Open {{ chatbot_assistant_name | e }}">
         <img src="{{ chatbot_avatar_url }}" alt="" class="seait-chat-fab-avatar" width="58" height="58" loading="lazy"
              onerror="this.onerror=null;this.src='{{ chatbot_mascot_fallback_url }}';">
@@ -692,6 +692,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     {% else %}
     </div>
@@ -720,7 +721,7 @@
             });
         });
     </script>
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and current_user.is_student() %}
     <script>
     window.SEAIT_CHAT_AVATAR = {{ chatbot_avatar_url | tojson }};
     window.SEAIT_CHAT_AVATAR_FALLBACK = {{ chatbot_mascot_fallback_url | tojson }};

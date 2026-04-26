@@ -161,34 +161,40 @@ def create_user():
 @role_required('admin')
 def reports():
     """Reports and statistics"""
-    # Monthly statistics
-    now = datetime.utcnow()
+    # Monthly statistics from Nov 2025 through current month.
+    start_month = datetime(2025, 11, 1)
+    current = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    cursor = start_month
     months = []
-    for i in range(6):  # Last 6 months
-        month_start = (now - timedelta(days=30*i)).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-        
+    while cursor <= current:
+        if cursor.month == 12:
+            next_month = cursor.replace(year=cursor.year + 1, month=1, day=1)
+        else:
+            next_month = cursor.replace(month=cursor.month + 1, day=1)
+
         lost_count = LostItem.query.filter(
-            LostItem.created_at >= month_start,
-            LostItem.created_at <= month_end
+            LostItem.created_at >= cursor,
+            LostItem.created_at < next_month
         ).count()
-        
+
         found_count = FoundItem.query.filter(
-            FoundItem.created_at >= month_start,
-            FoundItem.created_at <= month_end
+            FoundItem.created_at >= cursor,
+            FoundItem.created_at < next_month
         ).count()
-        
+
         claimed_count = Claim.query.filter(
-            Claim.release_date >= month_start,
-            Claim.release_date <= month_end
+            Claim.release_date.isnot(None),
+            Claim.release_date >= cursor,
+            Claim.release_date < next_month
         ).count()
-        
+
         months.append({
-            'month': month_start.strftime('%B %Y'),
+            'month': cursor.strftime('%B %Y'),
             'lost': lost_count,
             'found': found_count,
             'claimed': claimed_count
         })
+        cursor = next_month
     
     # Category statistics
     lost_categories = db.session.query(
@@ -203,6 +209,10 @@ def reports():
     
     return render_template('admin/reports.html',
                          months=months,
+                         graph_labels=[m['month'] for m in months],
+                         graph_lost=[m['lost'] for m in months],
+                         graph_found=[m['found'] for m in months],
+                         graph_claimed=[m['claimed'] for m in months],
                          lost_categories=lost_categories,
                          found_categories=found_categories)
 

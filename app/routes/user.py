@@ -83,7 +83,8 @@ def _process_report_lost_post():
         'item_name': item.item_name,
         'description': item.description or '',
         'category': item.category,
-        'color': item.color or ''
+        'color': item.color or '',
+        'image_path': item.image_path or ''
     } for item in found_items]
 
     lost_item_dict = {
@@ -91,7 +92,8 @@ def _process_report_lost_post():
         'item_name': lost_item.item_name,
         'description': lost_item.description or '',
         'category': lost_item.category,
-        'color': lost_item.color or ''
+        'color': lost_item.color or '',
+        'image_path': lost_item.image_path or ''
     }
 
     matches = matcher.find_matches(lost_item_dict, found_items_dict, threshold=50.0)
@@ -106,6 +108,16 @@ def _process_report_lost_post():
         db.session.add(match)
 
     db.session.commit()
+    try:
+        NotificationService.notify_staff_new_lost_item(
+            student_name=current_user.name,
+            item_name=lost_item.item_name,
+            category=lost_item.category,
+            location=lost_item.location_lost
+        )
+    except Exception:
+        from flask import current_app
+        current_app.logger.exception('Staff notification failed in report_lost')
 
     for match_data in matches[:5]:
         try:

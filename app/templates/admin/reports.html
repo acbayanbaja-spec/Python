@@ -2,6 +2,15 @@
 
 {% block title %}Reports - Lost and Found System{% endblock %}
 
+{% block extra_css %}
+<style>
+    .chart-wrap {
+        position: relative;
+        height: 320px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <h2 class="mb-4">Reports & Statistics</h2>
 
@@ -26,9 +35,21 @@
 <!-- Monthly Statistics -->
 <div class="card mb-4">
     <div class="card-header">
-        <h5 class="mb-0">Monthly Statistics (Last 6 Months)</h5>
+        <h5 class="mb-0">Monthly Statistics (Nov 2025 to Present)</h5>
     </div>
     <div class="card-body">
+        <div class="row g-4 mb-3">
+            <div class="col-lg-7">
+                <div class="chart-wrap">
+                    <canvas id="monthlyLineChart" aria-label="Monthly trend line chart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="chart-wrap">
+                    <canvas id="monthlyBarChart" aria-label="Monthly totals bar chart"></canvas>
+                </div>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
@@ -111,4 +132,45 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const labels = {{ graph_labels|tojson }};
+    const lost = {{ graph_lost|tojson }};
+    const found = {{ graph_found|tojson }};
+    const claimed = {{ graph_claimed|tojson }};
+
+    const lineCtx = document.getElementById('monthlyLineChart');
+    if (lineCtx) {
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Lost', data: lost, borderColor: '#667eea', backgroundColor: 'rgba(102,126,234,.15)', fill: true, tension: .35 },
+                    { label: 'Found', data: found, borderColor: '#0aa2c0', backgroundColor: 'rgba(10,162,192,.15)', fill: true, tension: .35 },
+                    { label: 'Claimed', data: claimed, borderColor: '#198754', backgroundColor: 'rgba(25,135,84,.15)', fill: true, tension: .35 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    const barCtx = document.getElementById('monthlyBarChart');
+    if (barCtx) {
+        const totals = labels.map((_, i) => (lost[i] || 0) + (found[i] || 0) + (claimed[i] || 0));
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Monthly Total', data: totals, backgroundColor: 'rgba(255,107,53,.85)' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+})();
+</script>
 {% endblock %}

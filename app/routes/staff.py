@@ -28,6 +28,7 @@ def dashboard():
     
     # Recent found items
     recent_items = FoundItem.query.order_by(FoundItem.created_at.desc()).limit(10).all()
+    recent_lost_reports = LostItem.query.order_by(LostItem.created_at.desc()).limit(20).all()
     
     # Pending claims
     claims = Claim.query.filter_by(release_status='pending')\
@@ -42,6 +43,7 @@ def dashboard():
                          available_items=available_items,
                          pending_claims=pending_claims,
                          recent_items=recent_items,
+                         recent_lost_reports=recent_lost_reports,
                          claims=claims,
                          common_items=common_items)
 
@@ -115,7 +117,8 @@ def _process_log_found_post():
         'item_name': found_item.item_name,
         'description': found_item.description or '',
         'category': found_item.category,
-        'color': found_item.color or ''
+        'color': found_item.color or '',
+        'image_path': found_item.image_path or ''
     }
 
     for lost_item in lost_items:
@@ -124,7 +127,8 @@ def _process_log_found_post():
             'item_name': lost_item.item_name,
             'description': lost_item.description or '',
             'category': lost_item.category,
-            'color': lost_item.color or ''
+            'color': lost_item.color or '',
+            'image_path': lost_item.image_path or ''
         }
 
         score = matcher.calculate_match_score(lost_item_dict, found_item_dict)

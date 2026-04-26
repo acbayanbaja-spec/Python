@@ -3,6 +3,7 @@ Notification Service for creating and managing user notifications
 """
 from app import db
 from app.models.notification import Notification
+from app.models.user import User
 from datetime import datetime
 
 class NotificationService:
@@ -69,3 +70,24 @@ class NotificationService:
         """Notify user of status update"""
         message = f"Status update for '{item_name}': {status}"
         return NotificationService.create_notification(user_id, message)
+
+    @staticmethod
+    def notify_staff_new_lost_item(student_name: str, item_name: str, category: str, location: str = None):
+        """Notify all staff/admin users about a newly reported lost item."""
+        location_text = location or 'Unknown location'
+        message = (
+            f"New lost report from {student_name}: '{item_name}' "
+            f"[{category}] at {location_text}"
+        )
+        staff_users = User.query.filter(User.role.in_(['staff', 'admin'])).all()
+        created = 0
+        for staff_user in staff_users:
+            notification = Notification(
+                user_id=staff_user.id,
+                message=message,
+                is_read=False
+            )
+            db.session.add(notification)
+            created += 1
+        db.session.commit()
+        return created
