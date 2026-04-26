@@ -142,6 +142,10 @@
         background: #f8f9fa;
     }
 
+    .thumb-placeholder.hidden {
+        display: none;
+    }
+
     @media (max-width: 992px) {
         .dashboard-grid {
             grid-template-columns: 1fr;
@@ -211,7 +215,8 @@
                     <tr>
                         <td>
                             {% if item.image_path %}
-                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Found item image" class="thumb-sm">
+                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Found item image" class="thumb-sm" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                                <span class="thumb-placeholder hidden">No image</span>
                             {% else %}
                                 <span class="thumb-placeholder">No image</span>
                             {% endif %}
@@ -259,7 +264,8 @@
                     <tr>
                         <td>
                             {% if item.image_path %}
-                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Found item image" class="thumb-sm">
+                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Found item image" class="thumb-sm" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                                <span class="thumb-placeholder hidden">No image</span>
                             {% else %}
                                 <span class="thumb-placeholder">No image</span>
                             {% endif %}
@@ -311,7 +317,8 @@
                         <td><code>{{ claim.claim_code }}</code></td>
                         <td>
                             {% if claim.lost_item.image_path %}
-                                <img src="{{ url_for('static', filename=claim.lost_item.image_path) }}" alt="Lost item image" class="thumb-sm">
+                                <img src="{{ url_for('static', filename=claim.lost_item.image_path) }}" alt="Lost item image" class="thumb-sm" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                                <span class="thumb-placeholder hidden">No image</span>
                             {% else %}
                                 <span class="thumb-placeholder">No image</span>
                             {% endif %}
@@ -343,7 +350,8 @@
             <div class="lost-report-card">
                 <div class="d-flex gap-2 align-items-start">
                     {% if item.image_path %}
-                        <img src="{{ url_for('static', filename=item.image_path) }}" alt="Lost item image" class="thumb-md">
+                        <img src="{{ url_for('static', filename=item.image_path) }}" alt="Lost item image" class="thumb-md" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                        <span class="thumb-placeholder hidden">No image</span>
                     {% else %}
                         <span class="thumb-placeholder">No image</span>
                     {% endif %}

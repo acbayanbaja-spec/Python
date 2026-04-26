@@ -287,7 +287,8 @@
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         {% if match.lost_item.image_path %}
-                                            <img src="{{ url_for('static', filename=match.lost_item.image_path) }}" alt="Lost item image" class="mini-photo">
+                                            <img src="{{ url_for('static', filename=match.lost_item.image_path) }}" alt="Lost item image" class="mini-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                            <span class="mini-photo-placeholder" style="display:none;">N/A</span>
                                         {% else %}
                                             <span class="mini-photo-placeholder">N/A</span>
                                         {% endif %}
@@ -297,7 +298,8 @@
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
                                         {% if match.found_item.image_path %}
-                                            <img src="{{ url_for('static', filename=match.found_item.image_path) }}" alt="Found item image" class="mini-photo">
+                                            <img src="{{ url_for('static', filename=match.found_item.image_path) }}" alt="Found item image" class="mini-photo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                            <span class="mini-photo-placeholder" style="display:none;">N/A</span>
                                         {% else %}
                                             <span class="mini-photo-placeholder">N/A</span>
                                         {% endif %}

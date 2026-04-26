@@ -99,7 +99,8 @@
                     <tr style="--tr: {{ loop.index }}">
                         <td>
                             {% if item.image_path %}
-                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Found item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;">
+                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Found item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <span class="text-muted small" style="display:none;">N/A</span>
                             {% else %}
                                 <span class="text-muted small">N/A</span>
                             {% endif %}
