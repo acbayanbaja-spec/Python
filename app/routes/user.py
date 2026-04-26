@@ -10,6 +10,7 @@ from app.models.claim import Claim
 from app.models.notification import Notification
 from app.services.lost_found_matcher import LostFoundMatcher
 from app.services.notification_service import NotificationService
+from app.services.interaction_logger import InteractionLogger
 from app.services.qr_service import QRService
 from app.utils.helpers import save_uploaded_file
 from datetime import datetime
@@ -61,6 +62,17 @@ def _process_report_lost_post():
 
     db.session.add(lost_item)
     db.session.flush()
+    InteractionLogger.log(
+        actor_id=current_user.id,
+        action_type='lost_item_reported',
+        title=f"Reported lost item: {item_name}",
+        description=f"Category: {category}",
+        target_user_id=current_user.id,
+        reference_type='lost_item',
+        reference_id=lost_item.id,
+        metadata={'date_lost': str(date_lost_obj), 'location_lost': location_lost or None},
+        commit=False
+    )
 
     matcher = LostFoundMatcher()
     from app.models.found_item import FoundItem
@@ -133,6 +145,7 @@ def dashboard():
     total_lost = LostItem.query.filter_by(user_id=current_user.id).count()
     matched_items = LostItem.query.filter_by(user_id=current_user.id, status='matched').count()
     claimed_items = LostItem.query.filter_by(user_id=current_user.id, status='claimed').count()
+    interaction_history = InteractionLogger.get_user_history(current_user.id, limit=25)
     
     return render_template('user/dashboard.html',
                          lost_items=lost_items,
@@ -140,7 +153,8 @@ def dashboard():
                          unread_count=unread_count,
                          total_lost=total_lost,
                          matched_items=matched_items,
-                         claimed_items=claimed_items)
+                         claimed_items=claimed_items,
+                         interaction_history=interaction_history)
 
 @user_bp.route('/report-lost', methods=['GET', 'POST'])
 @login_required
@@ -237,6 +251,29 @@ def confirm_match(match_id):
     )
     
     db.session.add(claim)
+    db.session.flush()
+    InteractionLogger.log(
+        actor_id=current_user.id,
+        action_type='match_confirmed',
+        title=f"Confirmed match for {match.lost_item.item_name}",
+        description=f"Match confidence: {match.score:.2f}%",
+        target_user_id=current_user.id,
+        reference_type='match',
+        reference_id=match.id,
+        metadata={'found_item_id': match.found_item_id, 'score': match.score},
+        commit=False
+    )
+    InteractionLogger.log(
+        actor_id=current_user.id,
+        action_type='claim_created',
+        title=f"Generated claim request for {match.lost_item.item_name}",
+        description=f"Claim code: {claim_code}",
+        target_user_id=current_user.id,
+        reference_type='claim',
+        reference_id=claim.id,
+        metadata={'claim_code': claim_code},
+        commit=False
+    )
     db.session.commit()
     
     flash('Match confirmed! You can now generate a claim QR code.', 'success')
@@ -255,6 +292,17 @@ def skip_match(match_id):
     
     if match.status == 'suggested':
         match.status = 'rejected'
+        InteractionLogger.log(
+            actor_id=current_user.id,
+            action_type='match_rejected',
+            title=f"Rejected suggested match for {match.lost_item.item_name}",
+            description=f"Found item candidate: {match.found_item.item_name}",
+            target_user_id=current_user.id,
+            reference_type='match',
+            reference_id=match.id,
+            metadata={'score': match.score},
+            commit=False
+        )
         db.session.commit()
         flash('Match skipped.', 'info')
     
@@ -273,6 +321,17 @@ def claim_qr(claim_id):
     
     # Generate QR code
     qr_code = QRService.generate_qr_code_for_claim(claim.claim_code, claim.id)
+    InteractionLogger.log(
+        actor_id=current_user.id,
+        action_type='claim_qr_viewed',
+        title=f"Viewed QR code for claim {claim.claim_code}",
+        description=f"Item: {claim.lost_item.item_name}",
+        target_user_id=current_user.id,
+        reference_type='claim',
+        reference_id=claim.id,
+        metadata={'release_status': claim.release_status},
+        commit=True
+    )
     
     return render_template('user/claim_qr.html', claim=claim, qr_code=qr_code)
 

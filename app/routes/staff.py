@@ -10,6 +10,7 @@ from app.models.lost_item import LostItem
 from app.models.match import Match
 from app.services.lost_found_matcher import LostFoundMatcher
 from app.services.notification_service import NotificationService
+from app.services.interaction_logger import InteractionLogger
 from app.utils.helpers import save_uploaded_file, role_required
 from datetime import datetime
 
@@ -92,6 +93,18 @@ def _process_log_found_post():
     )
 
     db.session.add(found_item)
+    db.session.flush()
+    InteractionLogger.log(
+        actor_id=current_user.id,
+        action_type='found_item_logged',
+        title=f"Logged found item: {item_name}",
+        description=f"Location: {location_found or 'N/A'}",
+        target_user_id=None,
+        reference_type='found_item',
+        reference_id=found_item.id,
+        metadata={'category': category, 'priority_flag': priority_flag},
+        commit=False
+    )
     db.session.commit()
 
     matcher = LostFoundMatcher()
@@ -233,6 +246,29 @@ def release_item(claim_id):
     
     if match:
         match.found_item.status = 'claimed'
+        InteractionLogger.log(
+            actor_id=current_user.id,
+            action_type='claim_released',
+            title=f"Released item to student: {claim.lost_item.item_name}",
+            description=f"Claim code: {claim.claim_code}",
+            target_user_id=claim.user_id,
+            reference_type='claim',
+            reference_id=claim.id,
+            metadata={'found_item_id': match.found_item_id},
+            commit=False
+        )
+    else:
+        InteractionLogger.log(
+            actor_id=current_user.id,
+            action_type='claim_released',
+            title=f"Released item to student: {claim.lost_item.item_name}",
+            description=f"Claim code: {claim.claim_code}",
+            target_user_id=claim.user_id,
+            reference_type='claim',
+            reference_id=claim.id,
+            metadata={'found_item_id': None},
+            commit=False
+        )
     
     db.session.commit()
     
