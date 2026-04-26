@@ -11,6 +11,7 @@ from app.models.match import Match
 from app.services.lost_found_matcher import LostFoundMatcher
 from app.services.notification_service import NotificationService
 from app.services.interaction_logger import InteractionLogger
+from app.services.qr_service import QRService
 from app.utils.helpers import save_uploaded_file, role_required
 from datetime import datetime
 
@@ -371,7 +372,6 @@ def approve_match(match_id):
     match.lost_item.status = 'matched'
     match.found_item.status = 'matched'
 
-    from app.services.qr_service import QRService
     claim_code = QRService.generate_claim_code()
     claim = Claim(
         claim_code=claim_code,
@@ -381,11 +381,13 @@ def approve_match(match_id):
     )
     db.session.add(claim)
     db.session.flush()
+    # Generate QR payload immediately after approval so students can claim right away.
+    QRService.generate_qr_code_for_claim(claim.claim_code, claim.id)
     InteractionLogger.log(
         actor_id=current_user.id,
         action_type='staff_match_approved',
         title=f"Approved match for {match.lost_item.item_name}",
-        description=f"Claim code generated: {claim_code}",
+        description=f"Claim + QR generated: {claim_code}",
         target_user_id=match.lost_item.user_id,
         reference_type='claim',
         reference_id=claim.id,

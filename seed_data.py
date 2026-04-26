@@ -70,7 +70,8 @@ def seed_database():
         db.session.commit()
 
         start_date = date(2025, 11, 1)
-        end_date = date.today()
+        # Requested timeline window for reports and analytics.
+        end_date = date(2026, 4, 30)
         categories = ['ID', 'Phone', 'Wallet', 'Keys', 'Bag', 'Books', 'Laptop', 'Other']
         colors = ['Black', 'Blue', 'Red', 'Gray', 'White', 'Green', 'Brown', 'Silver']
         locations = [

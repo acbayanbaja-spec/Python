@@ -75,6 +75,60 @@
     </div>
 </div>
 
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Category + Month Search</h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Category</label>
+                <select class="form-select" name="category">
+                    <option value="all" {% if selected_category == 'all' %}selected{% endif %}>All Categories</option>
+                    {% for cat in category_options %}
+                    <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Month</label>
+                <select class="form-select" name="month">
+                    <option value="all" {% if selected_month == 'all' %}selected{% endif %}>All Months</option>
+                    {% for m in month_options %}
+                    <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">Search Analytics</button>
+            </div>
+        </form>
+
+        <div class="table-responsive mt-3">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Category Filter</th>
+                        <th>Lost Count</th>
+                        <th>Found Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in monthly_category_rows %}
+                    <tr>
+                        <td>{{ row.month }}</td>
+                        <td>{{ selected_category if selected_category != 'all' else 'All Categories' }}</td>
+                        <td>{{ row.lost }}</td>
+                        <td>{{ row.found }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- Category Statistics -->
 <div class="row">
     <div class="col-md-6">

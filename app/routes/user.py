@@ -165,6 +165,8 @@ def dashboard():
     matched_items = LostItem.query.filter_by(user_id=current_user.id, status='matched').count()
     claimed_items = LostItem.query.filter_by(user_id=current_user.id, status='claimed').count()
     interaction_history = InteractionLogger.get_user_history(current_user.id, limit=25)
+    approved_claims = Claim.query.filter_by(user_id=current_user.id, release_status='pending')\
+        .order_by(Claim.created_at.desc()).limit(10).all()
     
     return render_template('user/dashboard.html',
                          lost_items=lost_items,
@@ -174,7 +176,8 @@ def dashboard():
                          total_lost=total_lost,
                          matched_items=matched_items,
                          claimed_items=claimed_items,
-                         interaction_history=interaction_history)
+                         interaction_history=interaction_history,
+                         approved_claims=approved_claims)
 
 @user_bp.route('/report-lost', methods=['GET', 'POST'])
 @login_required

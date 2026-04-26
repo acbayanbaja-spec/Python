@@ -358,6 +358,43 @@
             </div>
         </div>
         {% endif %}
+
+        {% if approved_claims %}
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-qr-code"></i> Approved Claims (QR Ready)</h5>
+                <span class="badge bg-success">{{ approved_claims|length }}</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Claim Code</th>
+                                <th>Status</th>
+                                <th>QR Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for claim in approved_claims %}
+                            <tr>
+                                <td>{{ claim.lost_item.item_name }}</td>
+                                <td><code>{{ claim.claim_code }}</code></td>
+                                <td><span class="status-badge status-pending">Ready for pickup</span></td>
+                                <td>
+                                    <a href="{{ url_for('user.claim_qr', claim_id=claim.id) }}" class="btn btn-sm btn-success">
+                                        <i class="bi bi-qr-code"></i> View QR
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <aside class="history-sidebar">

@@ -206,6 +206,42 @@ def reports():
         FoundItem.category,
         func.count(FoundItem.id).label('count')
     ).group_by(FoundItem.category).all()
+
+    # Filtered category-by-month analytics
+    selected_category = request.args.get('category', 'all')
+    selected_month = request.args.get('month', 'all')
+
+    monthly_category_rows = []
+    for month in months:
+        month_dt = datetime.strptime(month['month'], '%B %Y')
+        if month_dt.month == 12:
+            next_month = month_dt.replace(year=month_dt.year + 1, month=1, day=1)
+        else:
+            next_month = month_dt.replace(month=month_dt.month + 1, day=1)
+
+        if selected_month != 'all' and month['month'] != selected_month:
+            continue
+
+        lost_query = LostItem.query.filter(
+            LostItem.created_at >= month_dt,
+            LostItem.created_at < next_month
+        )
+        found_query = FoundItem.query.filter(
+            FoundItem.created_at >= month_dt,
+            FoundItem.created_at < next_month
+        )
+        if selected_category != 'all':
+            lost_query = lost_query.filter(LostItem.category == selected_category)
+            found_query = found_query.filter(FoundItem.category == selected_category)
+
+        monthly_category_rows.append({
+            'month': month['month'],
+            'category': selected_category,
+            'lost': lost_query.count(),
+            'found': found_query.count()
+        })
+
+    category_options = sorted({c.category for c in lost_categories} | {c.category for c in found_categories})
     
     return render_template('admin/reports.html',
                          months=months,
@@ -214,7 +250,12 @@ def reports():
                          graph_found=[m['found'] for m in months],
                          graph_claimed=[m['claimed'] for m in months],
                          lost_categories=lost_categories,
-                         found_categories=found_categories)
+                         found_categories=found_categories,
+                         monthly_category_rows=monthly_category_rows,
+                         selected_category=selected_category,
+                         selected_month=selected_month,
+                         category_options=category_options,
+                         month_options=[m['month'] for m in months])
 
 @admin_bp.route('/export-csv')
 @login_required
