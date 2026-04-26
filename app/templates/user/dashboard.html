@@ -149,6 +149,31 @@
         color: #b35b00;
     }
 
+    .pending-approval-card {
+        border-left: 4px solid #fd7e14;
+    }
+
+    .mini-photo {
+        width: 44px;
+        height: 44px;
+        border-radius: 0.5rem;
+        object-fit: cover;
+        border: 1px solid #dee2e6;
+    }
+
+    .mini-photo-placeholder {
+        width: 44px;
+        height: 44px;
+        border-radius: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed #adb5bd;
+        color: #6c757d;
+        font-size: 0.65rem;
+        background: #f8f9fa;
+    }
+
     @media (max-width: 992px) {
         .dashboard-layout {
             grid-template-columns: 1fr;
@@ -238,6 +263,58 @@
                 {% endif %}
             </div>
         </div>
+
+        {% if pending_staff_matches %}
+        <div class="card mb-4 pending-approval-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-hourglass-split"></i> Pending Staff Approval</h5>
+                <span class="badge bg-warning text-dark">{{ pending_staff_matches|length }} waiting</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Lost</th>
+                                <th>Found</th>
+                                <th>Score</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for match in pending_staff_matches %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if match.lost_item.image_path %}
+                                            <img src="{{ url_for('static', filename=match.lost_item.image_path) }}" alt="Lost item image" class="mini-photo">
+                                        {% else %}
+                                            <span class="mini-photo-placeholder">N/A</span>
+                                        {% endif %}
+                                        <span>{{ match.lost_item.item_name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if match.found_item.image_path %}
+                                            <img src="{{ url_for('static', filename=match.found_item.image_path) }}" alt="Found item image" class="mini-photo">
+                                        {% else %}
+                                            <span class="mini-photo-placeholder">N/A</span>
+                                        {% endif %}
+                                        <span>{{ match.found_item.item_name }}</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info">{{ match.score }}%</span></td>
+                                <td><span class="status-badge status-student_confirmed">Waiting Staff</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted small mb-0">You can proceed to claim QR only after staff approval.</p>
+            </div>
+        </div>
+        {% endif %}
 
         {% if matches %}
         <div class="card">

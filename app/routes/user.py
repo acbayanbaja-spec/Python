@@ -150,6 +150,12 @@ def dashboard():
         .filter(LostItem.user_id == current_user.id)\
         .filter(Match.status == 'suggested')\
         .order_by(Match.score.desc()).limit(5).all()
+
+    # Matches awaiting staff decision after student confirmation
+    pending_staff_matches = Match.query.join(LostItem)\
+        .filter(LostItem.user_id == current_user.id)\
+        .filter(Match.status == 'student_confirmed')\
+        .order_by(Match.created_at.desc()).limit(6).all()
     
     # Get unread notifications
     unread_count = NotificationService.get_unread_count(current_user.id)
@@ -163,6 +169,7 @@ def dashboard():
     return render_template('user/dashboard.html',
                          lost_items=lost_items,
                          matches=matches,
+                         pending_staff_matches=pending_staff_matches,
                          unread_count=unread_count,
                          total_lost=total_lost,
                          matched_items=matched_items,
