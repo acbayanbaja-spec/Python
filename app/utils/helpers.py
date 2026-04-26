@@ -7,7 +7,7 @@ from flask_login import current_user
 from werkzeug.utils import secure_filename
 from pathlib import Path
 import uuid
-from datetime import datetime
+import os
 
 def allowed_file(filename: str) -> bool:
     """Check if file extension is allowed"""
@@ -20,6 +20,34 @@ def save_uploaded_file(file, subfolder: str = 'items') -> str:
     Returns path relative to static folder
     """
     if file and allowed_file(file.filename):
+        cloud_name = (os.environ.get('CLOUD_NAME') or '').strip()
+        api_key = (os.environ.get('API_KEY') or '').strip()
+        api_secret = (os.environ.get('API_SECRET') or '').strip()
+
+        # Prefer Cloudinary when credentials are available.
+        if cloud_name and api_key and api_secret:
+            try:
+                import cloudinary
+                import cloudinary.uploader
+
+                cloudinary.config(
+                    cloud_name=cloud_name,
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    secure=True
+                )
+                upload_result = cloudinary.uploader.upload(
+                    file,
+                    folder=f"seait-lost-found/{subfolder}",
+                    resource_type="image",
+                    overwrite=False
+                )
+                secure_url = upload_result.get('secure_url')
+                if secure_url:
+                    return secure_url
+            except Exception:
+                current_app.logger.exception('Cloudinary upload failed, falling back to local storage')
+
         # Generate unique filename
         filename = secure_filename(file.filename)
         ext = filename.rsplit('.', 1)[1].lower()
