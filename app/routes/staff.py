@@ -401,54 +401,17 @@ def delete_lost_report(item_id):
 @role_required('staff', 'admin')
 def matches():
     """View all matches"""
-    matches = Match.query.filter(Match.status != 'deleted')\
-        .order_by(Match.score.desc(), Match.created_at.desc()).all()
-    deleted_matches = Match.query.filter_by(status='deleted')\
-        .order_by(Match.created_at.desc()).all()
-    return render_template('staff/matches.html', matches=matches, deleted_matches=deleted_matches)
+    matches = Match.query.order_by(Match.score.desc(), Match.created_at.desc()).all()
+    return render_template('staff/matches.html', matches=matches)
 
 
 @staff_bp.route('/delete-match/<int:match_id>', methods=['POST'])
 @login_required
 @role_required('staff', 'admin')
 def delete_match(match_id):
-    """Move a match to recycle bin (soft delete)."""
+    """Permanently delete a match record."""
     match = Match.query.get_or_404(match_id)
-    if match.status == 'deleted':
-        flash('Match is already in recycle bin.', 'info')
-        return redirect(url_for('staff.matches'))
-    match.status = 'deleted'
-    db.session.commit()
-    flash('Match moved to recycle bin.', 'success')
-    return redirect(url_for('staff.matches'))
-
-
-@staff_bp.route('/restore-match/<int:match_id>', methods=['POST'])
-@login_required
-@role_required('staff', 'admin')
-def restore_match(match_id):
-    """Restore a soft-deleted match."""
-    match = Match.query.get_or_404(match_id)
-    if match.status != 'deleted':
-        flash('This match is not deleted.', 'warning')
-        return redirect(url_for('staff.matches'))
-    # Restore to suggested for fresh review.
-    match.status = 'suggested'
-    db.session.commit()
-    flash('Match restored from recycle bin.', 'success')
-    return redirect(url_for('staff.matches'))
-
-
-@staff_bp.route('/purge-match/<int:match_id>', methods=['POST'])
-@login_required
-@role_required('staff', 'admin')
-def purge_match(match_id):
-    """Permanently delete a match from recycle bin."""
-    match = Match.query.get_or_404(match_id)
-    if match.status != 'deleted':
-        flash('Only deleted matches can be permanently removed.', 'error')
-        return redirect(url_for('staff.matches'))
     db.session.delete(match)
     db.session.commit()
-    flash('Match permanently deleted.', 'success')
+    flash('Match deleted.', 'success')
     return redirect(url_for('staff.matches'))
