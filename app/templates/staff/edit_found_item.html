@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Found Item - Lost and Found System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-pencil-square"></i> Edit Found Item</h2>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Update Found Item Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Item Name *</label>
+                    <input type="text" class="form-control" name="item_name" value="{{ item.item_name }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date Found *</label>
+                    <input type="date" class="form-control" name="date_found" value="{{ item.date_found.strftime('%Y-%m-%d') if item.date_found else '' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Category *</label>
+                    <select class="form-select" name="category" required>
+                        {% set categories = ['ID','Wallet','Phone','Keys','Bag','Clothing','Electronics','Books','Other'] %}
+                        {% for c in categories %}
+                        <option value="{{ c }}" {% if item.category == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Color</label>
+                    <input type="text" class="form-control" name="color" value="{{ item.color or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Location Found</label>
+                    <input type="text" class="form-control" name="location_found" value="{{ item.location_found or '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Storage Location</label>
+                    <input type="text" class="form-control" name="storage_location" value="{{ item.storage_location or '' }}">
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="3">{{ item.description or '' }}</textarea>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="priority_flag" id="priority_flag" {% if item.priority_flag %}checked{% endif %}>
+                        <label class="form-check-label" for="priority_flag">
+                            Mark as high priority
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label">Replace Image (optional)</label>
+                    <input type="file" class="form-control" name="image" accept="image/*">
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{{ url_for('staff.found_items') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

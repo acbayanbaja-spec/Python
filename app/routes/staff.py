@@ -198,6 +198,55 @@ def found_items():
     return render_template('staff/found_items.html', found_items=found_items, status_filter=status_filter)
 
 
+@staff_bp.route('/edit-found-item/<int:item_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('staff', 'admin')
+def edit_found_item(item_id):
+    """Edit found item details."""
+    item = FoundItem.query.get_or_404(item_id)
+
+    if request.method == 'POST':
+        item_name = (request.form.get('item_name') or '').strip()
+        category = (request.form.get('category') or '').strip()
+        color = (request.form.get('color') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        location_found = (request.form.get('location_found') or '').strip()
+        storage_location = (request.form.get('storage_location') or '').strip()
+        date_found = (request.form.get('date_found') or '').strip()
+        image = request.files.get('image')
+
+        if not item_name or not category or not date_found:
+            flash('Item name, category, and date found are required', 'error')
+            return render_template('staff/edit_found_item.html', item=item)
+
+        try:
+            item.date_found = datetime.strptime(date_found, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid date format', 'error')
+            return render_template('staff/edit_found_item.html', item=item)
+
+        item.item_name = item_name
+        item.category = category
+        item.color = color or None
+        item.description = description or None
+        item.location_found = location_found or None
+        item.storage_location = storage_location or None
+        item.priority_flag = category in ['ID', 'Wallet', 'Phone'] or (request.form.get('priority_flag') == 'on')
+
+        if image and getattr(image, 'filename', None):
+            image_path = save_uploaded_file(image)
+            if image_path is None:
+                flash('Invalid image format. Allowed: png, jpg, jpeg, gif, webp', 'error')
+                return render_template('staff/edit_found_item.html', item=item)
+            item.image_path = image_path
+
+        db.session.commit()
+        flash('Found item updated successfully.', 'success')
+        return redirect(url_for('staff.found_items'))
+
+    return render_template('staff/edit_found_item.html', item=item)
+
+
 @staff_bp.route('/lost-reports')
 @login_required
 @role_required('staff', 'admin')
@@ -309,7 +358,7 @@ def release_item(claim_id):
 def approve_match(match_id):
     """Staff approval: create claim code only after staff confirms."""
     match = Match.query.get_or_404(match_id)
-    if match.status not in ['student_confirmed', 'suggested']:
+    if match.status != 'student_confirmed':
         flash('This match cannot be approved in its current state.', 'warning')
         return redirect(url_for('staff.matches'))
 
@@ -355,7 +404,7 @@ def approve_match(match_id):
 def reject_match(match_id):
     """Staff rejection for student-confirmed match."""
     match = Match.query.get_or_404(match_id)
-    if match.status not in ['student_confirmed', 'suggested']:
+    if match.status != 'student_confirmed':
         flash('This match cannot be rejected in its current state.', 'warning')
         return redirect(url_for('staff.matches'))
     match.status = 'rejected'
@@ -371,15 +420,13 @@ def reject_match(match_id):
 @login_required
 @role_required('staff', 'admin')
 def delete_found_item(item_id):
-    """Allow staff to delete claimed found items."""
+    """Allow staff to delete found items in any status."""
     item = FoundItem.query.get_or_404(item_id)
-    if item.status != 'claimed':
-        flash('Only claimed found items can be deleted.', 'error')
-        return redirect(url_for('staff.found_items'))
+    item_name = item.item_name
     db.session.delete(item)
     db.session.commit()
-    flash('Claimed found item deleted.', 'success')
-    return redirect(url_for('staff.found_items', status='claimed'))
+    flash(f"Found item '{item_name}' deleted.", 'success')
+    return redirect(url_for('staff.found_items'))
 
 
 @staff_bp.route('/delete-lost-report/<int:item_id>', methods=['POST'])

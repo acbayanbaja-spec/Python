@@ -121,13 +121,10 @@
                             </span>
                         </td>
                         <td>
-                            {% if item.status == 'claimed' %}
-                            <form method="POST" action="{{ url_for('staff.delete_found_item', item_id=item.id) }}" onsubmit="return confirm('Delete this claimed item record?');">
+                            <a href="{{ url_for('staff.edit_found_item', item_id=item.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <form method="POST" action="{{ url_for('staff.delete_found_item', item_id=item.id) }}" style="display:inline;" onsubmit="return confirm('Delete this found item record?');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                             </form>
-                            {% else %}
-                            <span class="text-muted small">-</span>
-                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
