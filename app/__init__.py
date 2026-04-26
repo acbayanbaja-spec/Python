@@ -193,6 +193,50 @@ def create_app(config_name=None):
             ),
             'openai_chat_enabled': bool(os.environ.get('OPENAI_API_KEY', '').strip()),
         }
+
+    @app.context_processor
+    def inject_image_helpers():
+        from flask import url_for
+
+        placeholder = 'images/lost-item-placeholder.svg'
+
+        def item_image_url(raw_path):
+            """
+            Normalize various stored image path formats into a browser-safe URL.
+            Handles:
+            - uploads/items/abc.jpg
+            - /static/uploads/items/abc.jpg
+            - app/static/uploads/items/abc.jpg
+            - Windows-style paths with backslashes
+            - full http(s) URLs
+            """
+            if not raw_path:
+                return url_for('static', filename=placeholder)
+
+            value = str(raw_path).strip().replace('\\', '/')
+            low = value.lower()
+            if low.startswith('http://') or low.startswith('https://'):
+                return value
+
+            if '/static/' in low:
+                idx = low.rfind('/static/')
+                value = value[idx + len('/static/'):]
+            elif low.startswith('static/'):
+                value = value[len('static/'):]
+            elif low.startswith('app/static/'):
+                value = value[len('app/static/'):]
+            elif value.startswith('/'):
+                value = value.lstrip('/')
+
+            if not value:
+                value = placeholder
+
+            return url_for('static', filename=value)
+
+        return {
+            'item_image_url': item_image_url,
+            'default_item_image_url': url_for('static', filename=placeholder),
+        }
     
     return app
 

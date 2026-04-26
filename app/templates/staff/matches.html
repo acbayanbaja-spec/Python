@@ -26,7 +26,7 @@
                     <tr>
                         <td>
                             {% if match.lost_item.image_path %}
-                                <img src="{{ url_for('static', filename=match.lost_item.image_path) }}" alt="Lost item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <img src="{{ item_image_url(match.lost_item.image_path) }}" alt="Lost item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" onerror="this.src='{{ default_item_image_url }}';">
                                 <span class="text-muted small" style="display:none;">N/A</span>
                             {% else %}
                                 <span class="text-muted small">N/A</span>
@@ -38,7 +38,7 @@
                         </td>
                         <td>
                             {% if match.found_item.image_path %}
-                                <img src="{{ url_for('static', filename=match.found_item.image_path) }}" alt="Found item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <img src="{{ item_image_url(match.found_item.image_path) }}" alt="Found item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;" onerror="this.src='{{ default_item_image_url }}';">
                                 <span class="text-muted small" style="display:none;">N/A</span>
                             {% else %}
                                 <span class="text-muted small">N/A</span>
