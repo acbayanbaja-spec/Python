@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Lost Reports - Lost and Found System{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-journal-text"></i> Student Lost Reports</h2>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>All Reported Lost Items</span>
+        <form method="GET" class="d-flex align-items-center gap-2 m-0">
+            <label class="small mb-0 text-white-50" for="status">Status</label>
+            <select class="form-select form-select-sm" id="status" name="status" style="width:auto; min-width:9rem;" onchange="this.form.submit()">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="matched" {% if status_filter == 'matched' %}selected{% endif %}>Matched</option>
+                <option value="claimed" {% if status_filter == 'claimed' %}selected{% endif %}>Claimed</option>
+            </select>
+        </form>
+    </div>
+    <div class="card-body">
+        {% if lost_reports.items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Photo</th>
+                        <th>Item</th>
+                        <th>Student</th>
+                        <th>Category</th>
+                        <th>Location</th>
+                        <th>Date Lost</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in lost_reports.items %}
+                    <tr>
+                        <td>
+                            {% if item.image_path %}
+                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Lost item image" style="width:52px;height:52px;object-fit:cover;border-radius:8px;">
+                            {% else %}
+                                <span class="text-muted small">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.item_name }}</td>
+                        <td>{{ item.user.email }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.location_lost or 'N/A' }}</td>
+                        <td>{{ item.date_lost }}</td>
+                        <td><span class="status-badge status-{{ item.status }}">{{ item.status.title() }}</span></td>
+                        <td>
+                            {% if item.status == 'claimed' %}
+                            <form method="POST" action="{{ url_for('staff.delete_lost_report', item_id=item.id) }}" onsubmit="return confirm('Delete this claimed lost report?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No lost reports found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

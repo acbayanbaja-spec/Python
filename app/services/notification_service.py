@@ -91,3 +91,19 @@ class NotificationService:
             created += 1
         db.session.commit()
         return created
+
+    @staticmethod
+    def notify_staff_match_confirmation(student_name: str, item_name: str, match_score: float):
+        """Notify all staff/admin users that a student requested match confirmation."""
+        message = (
+            f"Student confirmation request: '{item_name}' by {student_name} "
+            f"(score {match_score:.1f}%). Review in Matches."
+        )
+        staff_users = User.query.filter(User.role.in_(['staff', 'admin'])).all()
+        created = 0
+        for staff_user in staff_users:
+            notification = Notification(user_id=staff_user.id, message=message, is_read=False)
+            db.session.add(notification)
+            created += 1
+        db.session.commit()
+        return created

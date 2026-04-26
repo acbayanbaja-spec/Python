@@ -302,6 +302,9 @@
                     <div class="history-meta">
                         <i class="bi bi-clock"></i> {{ log.created_at.strftime('%b %d, %Y %I:%M %p') if log.created_at else 'N/A' }}
                     </div>
+                    <form method="POST" action="{{ url_for('user.delete_history', history_id=log.id) }}" class="mt-2" onsubmit="return confirm('Delete this history entry?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
                 </div>
                 {% endfor %}
             {% else %}

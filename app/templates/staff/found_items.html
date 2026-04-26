@@ -84,17 +84,26 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
+                        <th>Photo</th>
                         <th>Item Name</th>
                         <th>Category</th>
                         <th>Date Found</th>
                         <th>Location</th>
                         <th>Storage</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in found_items.items %}
                     <tr style="--tr: {{ loop.index }}">
+                        <td>
+                            {% if item.image_path %}
+                                <img src="{{ url_for('static', filename=item.image_path) }}" alt="Found item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;">
+                            {% else %}
+                                <span class="text-muted small">N/A</span>
+                            {% endif %}
+                        </td>
                         <td>{{ item.item_name }}</td>
                         <td>
                             {{ item.category }}
@@ -109,6 +118,15 @@
                             <span class="status-badge status-{{ item.status }}">
                                 {{ item.status.title() }}
                             </span>
+                        </td>
+                        <td>
+                            {% if item.status == 'claimed' %}
+                            <form method="POST" action="{{ url_for('staff.delete_found_item', item_id=item.id) }}" onsubmit="return confirm('Delete this claimed item record?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted small">-</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

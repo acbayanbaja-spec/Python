@@ -11,19 +11,36 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
+                        <th>Lost Photo</th>
                         <th>Lost Item</th>
+                        <th>Found Photo</th>
                         <th>Found Item</th>
                         <th>Match Score</th>
                         <th>Status</th>
                         <th>Created</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for match in matches %}
                     <tr>
                         <td>
+                            {% if match.lost_item.image_path %}
+                                <img src="{{ url_for('static', filename=match.lost_item.image_path) }}" alt="Lost item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;">
+                            {% else %}
+                                <span class="text-muted small">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             <strong>{{ match.lost_item.item_name }}</strong><br>
                             <small class="text-muted">{{ match.lost_item.category }} - {{ match.lost_item.user.email }}</small>
+                        </td>
+                        <td>
+                            {% if match.found_item.image_path %}
+                                <img src="{{ url_for('static', filename=match.found_item.image_path) }}" alt="Found item image" style="width:44px;height:44px;object-fit:cover;border-radius:8px;">
+                            {% else %}
+                                <span class="text-muted small">N/A</span>
+                            {% endif %}
                         </td>
                         <td>
                             <strong>{{ match.found_item.item_name }}</strong><br>
@@ -38,6 +55,18 @@
                             </span>
                         </td>
                         <td>{{ match.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if match.status in ['student_confirmed', 'suggested'] %}
+                            <form method="POST" action="{{ url_for('staff.approve_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('staff.reject_match', match_id=match.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted small">No action</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

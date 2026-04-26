@@ -143,6 +143,10 @@
             background: linear-gradient(135deg, #dc3545, #bb2d3b);
             color: #fff;
         }
+        .status-student_confirmed {
+            background: linear-gradient(135deg, #fd7e14, #e35d00);
+            color: #fff;
+        }
 
         /* Main Content Area */
         main {
@@ -565,6 +569,11 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint in ('staff.found_items', 'staff.log_found') %}active{% endif %}" href="{{ url_for('staff.found_items') }}">
                                 <i class="bi bi-box-seam"></i> Found Items
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'staff.lost_reports' %}active{% endif %}" href="{{ url_for('staff.lost_reports') }}">
+                                <i class="bi bi-journal-text"></i> Lost Reports
                             </a>
                         </li>
                         <li class="nav-item">

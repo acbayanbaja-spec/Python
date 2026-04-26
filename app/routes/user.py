@@ -8,6 +8,7 @@ from app.models.lost_item import LostItem
 from app.models.match import Match
 from app.models.claim import Claim
 from app.models.notification import Notification
+from app.models.interaction_log import InteractionLog
 from app.services.lost_found_matcher import LostFoundMatcher
 from app.services.notification_service import NotificationService
 from app.services.interaction_logger import InteractionLogger
@@ -226,7 +227,7 @@ def matches():
 
     history_matches = Match.query.join(LostItem)\
         .filter(LostItem.user_id == current_user.id)\
-        .filter(Match.status.in_(['confirmed', 'rejected']))\
+        .filter(Match.status.in_(['student_confirmed', 'confirmed', 'rejected']))\
         .order_by(Match.created_at.desc()).all()
     
     return render_template('user/matches.html',
@@ -244,30 +245,14 @@ def confirm_match(match_id):
         flash('Unauthorized', 'error')
         return redirect(url_for('user.matches'))
     
-    # Update match status
-    match.status = 'confirmed'
-    
-    # Update lost item status
+    # Student submits confirmation request; staff must approve first.
+    match.status = 'student_confirmed'
     match.lost_item.status = 'matched'
-    
-    # Update found item status
     match.found_item.status = 'matched'
-    
-    # Create claim
-    claim_code = QRService.generate_claim_code()
-    claim = Claim(
-        claim_code=claim_code,
-        user_id=current_user.id,
-        item_id=match.lost_item.id,
-        release_status='pending'
-    )
-    
-    db.session.add(claim)
-    db.session.flush()
     InteractionLogger.log(
         actor_id=current_user.id,
-        action_type='match_confirmed',
-        title=f"Confirmed match for {match.lost_item.item_name}",
+        action_type='student_match_confirmed',
+        title=f"Requested staff confirmation for {match.lost_item.item_name}",
         description=f"Match confidence: {match.score:.2f}%",
         target_user_id=current_user.id,
         reference_type='match',
@@ -275,21 +260,15 @@ def confirm_match(match_id):
         metadata={'found_item_id': match.found_item_id, 'score': match.score},
         commit=False
     )
-    InteractionLogger.log(
-        actor_id=current_user.id,
-        action_type='claim_created',
-        title=f"Generated claim request for {match.lost_item.item_name}",
-        description=f"Claim code: {claim_code}",
-        target_user_id=current_user.id,
-        reference_type='claim',
-        reference_id=claim.id,
-        metadata={'claim_code': claim_code},
-        commit=False
-    )
     db.session.commit()
+    NotificationService.notify_staff_match_confirmation(
+        student_name=current_user.name,
+        item_name=match.lost_item.item_name,
+        match_score=match.score
+    )
     
-    flash('Match confirmed! You can now generate a claim QR code.', 'success')
-    return redirect(url_for('user.claim_qr', claim_id=claim.id))
+    flash('Match request sent. Staff must confirm before QR/claim code is generated.', 'info')
+    return redirect(url_for('user.matches'))
 
 @user_bp.route('/skip-match/<int:match_id>', methods=['POST'])
 @login_required
@@ -346,6 +325,20 @@ def claim_qr(claim_id):
     )
     
     return render_template('user/claim_qr.html', claim=claim, qr_code=qr_code)
+
+
+@user_bp.route('/delete-history/<int:history_id>', methods=['POST'])
+@login_required
+def delete_history(history_id):
+    """Delete a specific interaction history entry for student."""
+    history = InteractionLog.query.get_or_404(history_id)
+    if history.actor_id != current_user.id and history.target_user_id != current_user.id:
+        flash('Unauthorized', 'error')
+        return redirect(url_for('user.dashboard'))
+    db.session.delete(history)
+    db.session.commit()
+    flash('History entry deleted.', 'success')
+    return redirect(url_for('user.dashboard'))
 
 @user_bp.route('/notifications')
 @login_required

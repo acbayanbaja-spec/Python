@@ -197,6 +197,23 @@ def found_items():
     
     return render_template('staff/found_items.html', found_items=found_items, status_filter=status_filter)
 
+
+@staff_bp.route('/lost-reports')
+@login_required
+@role_required('staff', 'admin')
+def lost_reports():
+    """View all student lost reports with images."""
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', 'all')
+
+    query = LostItem.query
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+
+    lost_reports = query.order_by(LostItem.created_at.desc()) \
+        .paginate(page=page, per_page=20, error_out=False)
+    return render_template('staff/lost_reports.html', lost_reports=lost_reports, status_filter=status_filter)
+
 @staff_bp.route('/verify-claim', methods=['GET', 'POST'])
 @login_required
 @role_required('staff', 'admin')
@@ -284,6 +301,100 @@ def release_item(claim_id):
     
     flash('Item released successfully!', 'success')
     return redirect(url_for('staff.dashboard'))
+
+
+@staff_bp.route('/approve-match/<int:match_id>', methods=['POST'])
+@login_required
+@role_required('staff', 'admin')
+def approve_match(match_id):
+    """Staff approval: create claim code only after staff confirms."""
+    match = Match.query.get_or_404(match_id)
+    if match.status not in ['student_confirmed', 'suggested']:
+        flash('This match cannot be approved in its current state.', 'warning')
+        return redirect(url_for('staff.matches'))
+
+    existing_claim = Claim.query.filter_by(item_id=match.lost_item_id).first()
+    if existing_claim:
+        flash('Claim already exists for this item.', 'info')
+        return redirect(url_for('staff.matches'))
+
+    match.status = 'confirmed'
+    match.lost_item.status = 'matched'
+    match.found_item.status = 'matched'
+
+    from app.services.qr_service import QRService
+    claim_code = QRService.generate_claim_code()
+    claim = Claim(
+        claim_code=claim_code,
+        user_id=match.lost_item.user_id,
+        item_id=match.lost_item_id,
+        release_status='pending'
+    )
+    db.session.add(claim)
+    db.session.flush()
+    InteractionLogger.log(
+        actor_id=current_user.id,
+        action_type='staff_match_approved',
+        title=f"Approved match for {match.lost_item.item_name}",
+        description=f"Claim code generated: {claim_code}",
+        target_user_id=match.lost_item.user_id,
+        reference_type='claim',
+        reference_id=claim.id,
+        metadata={'match_id': match.id, 'found_item_id': match.found_item_id},
+        commit=False
+    )
+    db.session.commit()
+    NotificationService.notify_status_update(match.lost_item.user_id, match.lost_item.item_name, 'Staff approved match. Claim QR is now available.')
+    flash('Match approved and claim code created.', 'success')
+    return redirect(url_for('staff.matches'))
+
+
+@staff_bp.route('/reject-match/<int:match_id>', methods=['POST'])
+@login_required
+@role_required('staff', 'admin')
+def reject_match(match_id):
+    """Staff rejection for student-confirmed match."""
+    match = Match.query.get_or_404(match_id)
+    if match.status not in ['student_confirmed', 'suggested']:
+        flash('This match cannot be rejected in its current state.', 'warning')
+        return redirect(url_for('staff.matches'))
+    match.status = 'rejected'
+    match.lost_item.status = 'pending'
+    match.found_item.status = 'available'
+    db.session.commit()
+    NotificationService.notify_status_update(match.lost_item.user_id, match.lost_item.item_name, 'Staff rejected the match request.')
+    flash('Match rejected.', 'info')
+    return redirect(url_for('staff.matches'))
+
+
+@staff_bp.route('/delete-found-item/<int:item_id>', methods=['POST'])
+@login_required
+@role_required('staff', 'admin')
+def delete_found_item(item_id):
+    """Allow staff to delete claimed found items."""
+    item = FoundItem.query.get_or_404(item_id)
+    if item.status != 'claimed':
+        flash('Only claimed found items can be deleted.', 'error')
+        return redirect(url_for('staff.found_items'))
+    db.session.delete(item)
+    db.session.commit()
+    flash('Claimed found item deleted.', 'success')
+    return redirect(url_for('staff.found_items', status='claimed'))
+
+
+@staff_bp.route('/delete-lost-report/<int:item_id>', methods=['POST'])
+@login_required
+@role_required('staff', 'admin')
+def delete_lost_report(item_id):
+    """Allow staff to delete claimed lost reports."""
+    item = LostItem.query.get_or_404(item_id)
+    if item.status != 'claimed':
+        flash('Only claimed lost reports can be deleted.', 'error')
+        return redirect(url_for('staff.lost_reports'))
+    db.session.delete(item)
+    db.session.commit()
+    flash('Claimed lost report deleted.', 'success')
+    return redirect(url_for('staff.lost_reports', status='claimed'))
 
 @staff_bp.route('/matches')
 @login_required
